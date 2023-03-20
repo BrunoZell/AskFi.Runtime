@@ -1,0 +1,47 @@
+using StrategyDelegate = System.Func<AskFi.Sdk.StrategyReflection, AskFi.Sdk.WorldState, AskFi.Sdk.Decision>;
+
+namespace AskFi.Runtime;
+
+public class AskbotBuilder
+{
+    private readonly Dictionary<Type, object> _observers = new(); // of type IObserver<Perception> (where Perception = .Key)
+    private readonly Dictionary<Type, object> _brokers = new(); // of type IBroker<Action> (where Action = .Key)
+    private StrategyDelegate? _strategy = null!;
+
+    public void AddObserver<TPerception>(Sdk.IObserver<TPerception> observer)
+    {
+        var added = _observers.TryAdd(typeof(TPerception), observer);
+
+        if (!added) {
+            throw new InvalidOperationException(
+                $"An observer for perception type '{typeof(TPerception).FullName}' has already been added to " +
+                $"this Askbot Builder. Only one observer instance per perception-type can be used.");
+        }
+    }
+
+    public void AddBroker<TAction>(Sdk.IBroker<TAction> broker)
+    {
+        var added = _brokers.TryAdd(typeof(TAction), broker);
+
+        if (!added) {
+            throw new InvalidOperationException(
+                $"A broker for action type '{typeof(TAction).FullName}' has already been added to " +
+                $"this Askbot Builder. Only one broker instance per action-type can be used.");
+        }
+    }
+
+    public void WithStrategy(StrategyDelegate strategy) {
+        if (_strategy is not null) {
+            throw new InvalidOperationException(
+                $"A strategy has already been added to this Askbot Builder. " +
+                $"Only one strategy per instance can be used.");
+        }
+
+        _strategy = strategy;
+    }
+
+    public Askbot Build()
+    {
+        return new Askbot(_observers, _brokers, (s, w) => Sdk.Decision.Inaction);
+    }
+}
