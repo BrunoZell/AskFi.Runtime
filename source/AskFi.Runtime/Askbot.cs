@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 using AskFi.Runtime.Internal;
-using AskFi.Sdk;
+using static AskFi.Sdk;
 
 namespace AskFi.Runtime;
 

@@ -1,4 +1,4 @@
-using AskFi.Sdk;
+using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Internal;
 
