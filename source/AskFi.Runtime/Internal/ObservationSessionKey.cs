@@ -9,6 +9,13 @@ namespace AskFi.Runtime.Internal;
 /// </summary>
 internal class ObservationSessionKey
 {
-    public object ObserverInstance { get; init; }
-    public ObservationSession ObserverProvidedSessionKey { get; init; }
+    /// <summary>
+    /// In-process identity of the IObserver<P>-instance this session originated from.
+    /// </summary>
+    public required object ObserverInstance { get; init; }
+
+    /// <summary>
+    /// Correlation id of an observation session. Scoped to the IObserver<P>-instance <see cref="ObserverInstance"/>.
+    /// </summary>
+    public required ObservationSession ObserverProvidedSessionKey { get; init; }
 }
