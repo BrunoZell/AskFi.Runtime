@@ -29,7 +29,7 @@ internal class SessionController
             if (decision is Decision.Initiate initiate) {
                 // Strategy decided to do something.
                 // Assign all action initiations an id and send to according broker instance
-                foreach (var action in initiate.ActionSet.ToArray()) {
+                foreach (var action in initiate.ActionSet.Initiatives.ToArray()) {
                     var actionId = ActionId.NewActionId(DateTime.UtcNow, _nonce: 0ul); // Todo: Ensure uniqeness
                     initiatedActions.Add(actionId);
                     ExecuteAction(actionId, action);
