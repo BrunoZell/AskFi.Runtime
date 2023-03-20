@@ -40,8 +40,29 @@ public class AskbotBuilder
         _strategy = strategy;
     }
 
+    /// <summary>
+    /// Configures a strategy that always decides to do nothing (<see cref="Sdk.Decision.Inaction"/>).
+    /// </summary>
+    public void WithoutStrategy()
+    {
+        if (_strategy is not null)
+        {
+            throw new InvalidOperationException(
+                $"A strategy has already been added to this Askbot Builder. " +
+                $"Only one strategy per instance can be used.");
+        }
+
+        _strategy = (s, w) => Sdk.Decision.Inaction;
+    }
+
     public Askbot Build()
     {
-        return new Askbot(_observers, _brokers, (s, w) => Sdk.Decision.Inaction);
+        if (_strategy is null)
+        {
+            throw new InvalidOperationException("A strategy must be specified before building an Askbot Instance. " +
+                $"If no actions ever should be executed, explicitly configure it by calling {nameof(WithoutStrategy)} on the builder.");
+        }
+
+        return new Askbot(_observers, _brokers, _strategy);
     }
 }
