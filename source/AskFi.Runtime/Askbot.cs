@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 using AskFi.Runtime.Internal;
 using static AskFi.Sdk;
 
@@ -33,11 +34,12 @@ public class Askbot
         await sessionController.Run(sessionShutdown);
     }
 
-    private static ObserverSequencer StartObserverSequencer(/*P*/ Type perception, /*IObserver<P>*/ object observer, WorldSequencer worldSequencer, CancellationToken sessionShutdown)
+    private static ObserverSequencer StartObserverSequencer(/*'P*/ Type perception, /*IObserver<'P>*/ object observer, WorldSequencer worldSequencer, CancellationToken sessionShutdown)
     {
         var startNew = typeof(ObserverSequencer).GetMethod(nameof(ObserverSequencer.StartNew))!;
         var startNewP = startNew.MakeGenericMethod(perception);
-        var sequencer = (ObserverSequencer)startNewP.Invoke(obj: null, new object[] { observer, worldSequencer.ObservationSink, sessionShutdown });
+        var sequencer = startNewP.Invoke(obj: null, new object[] { observer, worldSequencer.ObservationSink, sessionShutdown }) as ObserverSequencer;
+        Debug.Assert(sequencer is not null, $"Return type of {nameof(ObserverSequencer.StartNew)} changed and now is incompatible with this code.");
         return sequencer;
     }
 }
