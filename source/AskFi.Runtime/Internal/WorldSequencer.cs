@@ -1,6 +1,6 @@
 using System.Threading.Channels;
-using static AskFi.Sdk;
 using static AskFi.Runtime.DataModel;
+using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Internal;
 

@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AskFi.Runtime.DataModel\AskFi.Runtime.DataModel.fsproj" />
     <ProjectReference Include="..\..\sdk\source\AskFi.Sdk.fsproj" />
+    <ProjectReference Include="..\AskFi.Runtime.DataModel\AskFi.Runtime.DataModel.fsproj" />
   </ItemGroup>
 
 </Project>
