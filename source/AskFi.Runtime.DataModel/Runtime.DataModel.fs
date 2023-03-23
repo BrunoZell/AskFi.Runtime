@@ -1,5 +1,7 @@
 module AskFi.Runtime.DataModel
 
+open System
+
 type ObservationStreamHead<'Perception> =
     | Beginning
     | Observation of Observation<'Perception>
@@ -14,7 +16,7 @@ and Observation<'Perception> = {
     Previous: ObservationStreamHead<'Perception>
 }
 
-type Timestamp = uint64
+type Timestamp = DateTime
 type WorldEventSequenceHash = int32 // Actually bytes32 or some well known hash that's used for CIDs to the world event sequence heads
 /// Every session sequences observations from all IObserver-instances into a single sequence of observations (accorss all Perception-types)
 type WorldEventSequence =

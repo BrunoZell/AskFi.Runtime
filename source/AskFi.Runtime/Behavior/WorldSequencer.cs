@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using AskFi.Runtime.Objects;
+using AskFi.Runtime.Queries;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
 
@@ -31,16 +32,17 @@ internal class WorldSequencer
     public async IAsyncEnumerable<WorldState> Sequence()
     {
         var eventSequence = WorldEventSequence.Empty;
+        var eventSequenceHash = 0;
 
         await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync()) {
-            var timestamp = (ulong)DateTime.UtcNow.Ticks;
-            var previousHash = eventSequence.GetHashCode();
+            var timestamp = DateTime.UtcNow;
             var latestObservationStreamHead = newObservation.ObservationStreamHead;
 
             // Append happening to this worlds event sequence
-            eventSequence = WorldEventSequence.NewHappening(timestamp, previousHash, _nonce: 0ul, latestObservationStreamHead);
+            eventSequence = WorldEventSequence.NewHappening(timestamp, _previous: eventSequenceHash, _nonce: 0ul, latestObservationStreamHead);
 
-            // Todo: Send world event tree to persistence subsystem
+            // Persist and implicitly publish to downstream query system (to later query by hash if desired)
+            eventSequenceHash = WorldEventStore.Store(eventSequence);
 
             var latestEventSequenceHash = eventSequence.GetHashCode();
             var state = new WorldState(latestEventSequenceHash);
