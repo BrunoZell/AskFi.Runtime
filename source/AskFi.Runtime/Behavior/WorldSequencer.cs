@@ -1,8 +1,9 @@
 using System.Threading.Channels;
+using AskFi.Runtime.Objects;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
 
-namespace AskFi.Runtime.Internal;
+namespace AskFi.Runtime.Behavior;
 
 /// <summary>
 /// A single instance to pipe observations from all <see cref="ObserverSequencer"/> (<see cref="Sdk.IObserver{Perception}"/>)

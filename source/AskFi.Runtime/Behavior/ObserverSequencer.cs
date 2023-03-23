@@ -1,7 +1,8 @@
 using System.Threading.Channels;
+using AskFi.Runtime.Objects;
 using static AskFi.Runtime.DataModel;
 
-namespace AskFi.Runtime.Internal;
+namespace AskFi.Runtime.Behavior;
 
 /// <summary>
 /// Wraps an <see cref="Sdk.IObserver{Perception}"/> and does basic bookkeeping around the incomding

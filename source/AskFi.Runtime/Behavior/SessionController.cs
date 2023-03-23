@@ -1,6 +1,6 @@
 using static AskFi.Sdk;
 
-namespace AskFi.Runtime.Internal;
+namespace AskFi.Runtime.Behavior;
 
 internal class SessionController
 {

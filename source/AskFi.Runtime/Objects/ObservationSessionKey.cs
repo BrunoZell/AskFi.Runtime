@@ -1,6 +1,6 @@
 using static AskFi.Sdk;
 
-namespace AskFi.Runtime.Internal;
+namespace AskFi.Runtime.Objects;
 
 /// <summary>
 /// Runtime-version of <see cref="ObservationSession"/>, where the uniqueness-requirement
