@@ -59,6 +59,11 @@ internal class ObserverSequencer : IAsyncDisposable
                     },
                 });
             }
+#if DEBUG
+        } catch (Exception ex) {
+            Console.Error.WriteLine(ex.ToString());
+#endif
+
         } finally {
             observationSink.Complete();
         }
