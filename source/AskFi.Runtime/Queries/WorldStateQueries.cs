@@ -1,19 +1,35 @@
 using System.Diagnostics;
+using Microsoft.FSharp.Core;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Queries;
-public static class WorldStateQueries
+public class WorldStateQueries : IWorldState
 {
-    public static IEnumerable<ReadOnlyMemory<TPerception>> QueryPerceptions<TPerception>(WorldState worldState, DateTime since)
-    {
-        var tree = WorldEventStore.LookupSequencePosition(worldState);
+    private readonly WorldState _worldState;
 
-        foreach (var observation in Since(tree, since)) {
+    public WorldStateQueries(WorldState worldState) =>
+        _worldState = worldState;
+
+    public FSharpOption<Perception> latest<Perception>()
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerable<TPerception> since<TPerception>(DateTime timestamp)
+    {
+        var tree = WorldEventStore.LookupSequencePosition(_worldState);
+
+        foreach (var observation in Since(tree, timestamp)) {
             // Only reuturn observations of requested type TPerception
             if (observation.observationStreamHead is DataModel.ObservationStreamHead<TPerception>.Observation relevantObservation) {
                 yield return relevantObservation.Item.Observations;
             }
         }
+    }
+
+    IEnumerable<(FSharpOption<TPerception1>, FSharpOption<TPerception2>)> IWorldState.since<TPerception1, TPerception2>(DateTime timestamp)
+    {
+        throw new NotImplementedException();
     }
 
     private static IEnumerable<DataModel.WorldEventSequence.Happening> Since(DataModel.WorldEventSequence worldEventSequence, DateTime since)
