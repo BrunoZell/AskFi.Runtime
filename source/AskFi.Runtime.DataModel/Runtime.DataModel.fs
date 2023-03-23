@@ -22,4 +22,4 @@ type WorldEventSequenceHash = int32 // Actually bytes32 or some well known hash 
 type WorldEventSequence =
     | Empty
     /// nonce: A field with arbitrary data to use in case of a hash collision within the same WorldEventSequence (must be unique to form a valid linked list) but small enough to not be too computationally heavy.
-    | Happening of at:Timestamp (*as of runtime clock*) * previous:WorldEventSequenceHash (*hash of WorldEventSequence*) * nonce:uint64 * observation:obj // actually Observation<_> of all possible types. Implement as recursion scheme
+    | Happening of at:Timestamp (*as of runtime clock*) * previous:WorldEventSequenceHash (*hash of WorldEventSequence*) * nonce:uint64 * observationStreamHead:obj // actually ObservationStreamHead<_> of all possible types. Todo: implement as recursion scheme

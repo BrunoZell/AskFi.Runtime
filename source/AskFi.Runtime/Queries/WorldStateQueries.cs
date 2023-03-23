@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using AskFi.Runtime.Objects;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Queries;
@@ -10,12 +9,11 @@ public static class WorldStateQueries
         var tree = WorldEventStore.LookupSequencePosition(worldState);
 
         foreach (var observation in Since(tree, since)) {
-            if (observation.observation == typeof(TPerception)) {
-                //yield return observation.Perceptions;
+            // Only reuturn observations of requested type TPerception
+            if (observation.observationStreamHead is DataModel.ObservationStreamHead<TPerception>.Observation relevantObservation) {
+                yield return relevantObservation.Item.Observations;
             }
         }
-
-        yield break;
     }
 
     private static IEnumerable<DataModel.WorldEventSequence.Happening> Since(DataModel.WorldEventSequence worldEventSequence, DateTime since)
