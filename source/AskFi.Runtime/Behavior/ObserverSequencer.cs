@@ -22,7 +22,7 @@ internal class ObserverSequencer : IAsyncDisposable
 
     public static ObserverSequencer StartNew<TPerception>(
         Sdk.IObserver<TPerception> observer,
-        ChannelWriter<OnNewObservation> observationSink,
+        ChannelWriter<NewSequencedObservation> observationSink,
         CancellationToken sessionShutdown)
     {
         var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(sessionShutdown);
@@ -37,7 +37,7 @@ internal class ObserverSequencer : IAsyncDisposable
     /// </summary>
     private static async Task PullObservations<TPerception>(
         Sdk.IObserver<TPerception> observer,
-        ChannelWriter<OnNewObservation> observationSink,
+        ChannelWriter<NewSequencedObservation> observationSink,
         CancellationToken cancellationToken)
     {
         await Task.Yield();
@@ -45,19 +45,16 @@ internal class ObserverSequencer : IAsyncDisposable
         try {
             var streamHead = ObservationSequenceHead<TPerception>.Beginning;
             await foreach (var observation in observer.Observations.WithCancellation(cancellationToken)) {
-                var sequencedObservation = new Observation<TPerception>(observation.Perceptions, previous: streamHead);
-                streamHead = ObservationSequenceHead<TPerception>.NewObservation(sequencedObservation);
+                var observationSequenceNode = new ObservationSequenceNode<TPerception>(observation, streamHead);
+                streamHead = ObservationSequenceHead<TPerception>.NewObservation(observationSequenceNode);
 
                 // Todo: Send to persistence subsystem to serialize, put & pin in IPFS cluster. + insertig according metadata in etcd
-                // Todo: Maybe also eagerly build an index of observation session correlations: ObservationSession -> Observation<_> list
+                // Todo: Build indices for chronological and continuous sorting
 
-                await observationSink.WriteAsync(new OnNewObservation() {
+                await observationSink.WriteAsync(new NewSequencedObservation() {
                     PerceptionType = typeof(TPerception),
                     ObservationSequenceHead = streamHead,
-                    Session = new ObservationSessionKey() {
-                        ObserverInstance = observer,
-                        ObserverProvidedSessionKey = observation.Session,
-                    },
+                    Observation = observation
                 });
             }
 #if DEBUG

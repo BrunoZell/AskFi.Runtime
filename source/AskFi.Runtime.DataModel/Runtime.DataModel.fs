@@ -1,27 +1,20 @@
 module AskFi.Runtime.DataModel
 
+open AskFi
 open System
-open System.Runtime.CompilerServices
 
 // ############################
 // #### OBSERVER SUBSYSTEM ####
 // ############################
 
-/// Groups perceptions that happened at the same instant. In this case, there must be no order defined
-/// to unabiguously compute over that data later on.
-/// This typically happens when there are multiple perceptions sourced from a single received network message.
-[<IsReadOnly; Struct>]
-type AtomicObservation<'Perception> =
-    | SensoryInformation of System.ReadOnlyMemory<'Perception>
-
 /// Raw data structure produced by an Observer instance.
 /// All new information received via this Observer instance is referenced in this tree.
 type ObservationSequenceHead<'Perception> =
     | Beginning
-    | Observation of Observation<'Perception>
-and Observation<'Perception> = {
+    | Observation of ObservationSequenceNode<'Perception>
+and ObservationSequenceNode<'Perception> = {
     /// All observations that happened at this instant.
-    Observation: AtomicObservation<'Perception>
+    Observation: Sdk.Observation<'Perception>
 
     /// Link to the previous observations of this session, forming a linked list and sequencing them.
     /// If this is the first observation of this session, this links to the 'Beginning' union case.
