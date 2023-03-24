@@ -28,6 +28,8 @@ and Observation<'Perception> = {
     Previous: ObservationSequenceHead<'Perception>
 }
 
+// Todo: Add index trees: ChronologicalObservationSequence, ContinuousObservationSequence, ChronologicalContinuousObservationSequence
+
 // ###########################
 // #### SESSION SUBSYSTEM ####
 // ###########################
