@@ -1,6 +1,7 @@
 module AskFi.Runtime.DataModel
 
 open System
+open System.Runtime.CompilerServices
 
 // ############################
 // #### OBSERVER SUBSYSTEM ####
@@ -9,6 +10,7 @@ open System
 /// Groups perceptions that happened at the same instant. In this case, there must be no order defined
 /// to unabiguously compute over that data later on.
 /// This typically happens when there are multiple perceptions sourced from a single received network message.
+[<IsReadOnly; Struct>]
 type AtomicObservation<'Perception> =
     | SensoryInformation of System.ReadOnlyMemory<'Perception>
 
