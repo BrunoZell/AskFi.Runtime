@@ -6,6 +6,12 @@ open System
 // #### OBSERVER SUBSYSTEM ####
 // ############################
 
+/// Groups perceptions that happened at the same instant. In this case, there must be no order defined
+/// to unabiguously compute over that data later on.
+/// This typically happens when there are multiple perceptions sourced from a single received network message.
+type AtomicObservation<'Perception> =
+    | SensoryInformation of System.ReadOnlyMemory<'Perception>
+
 /// Raw data structure produced by an Observer instance.
 /// All new information received via this Observer instance is referenced in this tree.
 type ObservationSequenceHead<'Perception> =
@@ -13,12 +19,10 @@ type ObservationSequenceHead<'Perception> =
     | Observation of Observation<'Perception>
 and Observation<'Perception> = {
     /// All observations that happened at this instant.
-    /// (Possible multiple if there are more than one sensory event in a single received network message).
-    Observations: System.ReadOnlyMemory<'Perception>
+    Observation: AtomicObservation<'Perception>
 
-    /// Link to the observation session this observation is part of.
-    /// If this is the first observation, this links to the session info.
-    /// For all consecutive observations, this links to the previous observation, forming a linked list.
+    /// Link to the previous observations of this session, forming a linked list and sequencing them.
+    /// If this is the first observation of this session, this links to the 'Beginning' union case.
     Previous: ObservationSequenceHead<'Perception>
 }
 
