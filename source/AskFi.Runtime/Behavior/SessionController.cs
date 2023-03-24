@@ -5,12 +5,12 @@ namespace AskFi.Runtime.Behavior;
 internal class SessionController
 {
     private readonly PerspectiveSequencer _perspectiveSequencer;
-    private readonly Func<StrategyReflection, WorldState, Decision> _strategy;
+    private readonly Func<StrategyReflection, Perspective, Decision> _strategy;
     private readonly IReadOnlyDictionary<Type, object> _brokers;
 
     public SessionController(
         PerspectiveSequencer perspectiveSequencer,
-        Func<StrategyReflection, WorldState, Decision> strategy,
+        Func<StrategyReflection, Perspective, Decision> strategy,
         IReadOnlyDictionary<Type, object> brokers)
     {
         _perspectiveSequencer = perspectiveSequencer;

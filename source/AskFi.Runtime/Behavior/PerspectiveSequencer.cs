@@ -27,9 +27,9 @@ internal class PerspectiveSequencer
 
     /// <summary>
     /// Long-running background task that reads all pooled new observations and builds the <see cref="PerspectiveSequenceHead"/> of this session,
-    /// then wraps it into a <see cref="WorldState"/> and returns it.
+    /// then wraps it into a <see cref="Perspective"/> and returns it.
     /// </summary>
-    public async IAsyncEnumerable<WorldState> Sequence()
+    public async IAsyncEnumerable<Perspective> Sequence()
     {
         var eventSequence = PerspectiveSequenceHead.Empty;
         var eventSequenceHash = 0;
@@ -42,10 +42,10 @@ internal class PerspectiveSequencer
             eventSequence = PerspectiveSequenceHead.NewHappening(timestamp, _previous: eventSequenceHash, latestObservationSequenceHead);
 
             // Persist and implicitly publish to downstream query system (to later query by hash if desired)
-            eventSequenceHash = WorldEventStore.Store(eventSequence);
+            eventSequenceHash = PerspectiveSequenceStore.Store(eventSequence);
 
             var latestEventSequenceHash = eventSequence.GetHashCode();
-            var state = new WorldState(latestEventSequenceHash);
+            var state = new Perspective(latestEventSequenceHash);
             yield return state;
         }
     }

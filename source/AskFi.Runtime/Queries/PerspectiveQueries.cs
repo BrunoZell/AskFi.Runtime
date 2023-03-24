@@ -3,21 +3,22 @@ using Microsoft.FSharp.Core;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Queries;
-public class WorldStateQueries : IWorldState
+
+public class PerspectiveQueries : IPerspectiveQueries
 {
-    private readonly WorldState _worldState;
+    private readonly Perspective _perspective;
 
-    public WorldStateQueries(WorldState worldState) =>
-        _worldState = worldState;
+    public PerspectiveQueries(Perspective perspective) =>
+        _perspective = perspective;
 
-    public FSharpOption<Perception> latest<Perception>()
+    public FSharpOption<Observation<TPerception>> latest<TPerception>()
     {
         throw new NotImplementedException();
     }
 
-    public IEnumerable<TPerception> since<TPerception>(DateTime timestamp)
+    public IEnumerable<Observation<TPerception>> since<TPerception>(DateTime timestamp)
     {
-        var tree = WorldEventStore.LookupSequencePosition(_worldState);
+        var tree = PerspectiveSequenceStore.LookupSequencePosition(_perspective);
 
         foreach (var observation in Since(tree, timestamp)) {
             // Only reuturn observations of requested type TPerception
@@ -27,7 +28,7 @@ public class WorldStateQueries : IWorldState
         }
     }
 
-    IEnumerable<(FSharpOption<TPerception1>, FSharpOption<TPerception2>)> IWorldState.since<TPerception1, TPerception2>(DateTime timestamp)
+    public IEnumerable<(FSharpOption<Observation<TPerception1>>, FSharpOption<Observation<TPerception2>>)> since<TPerception1, TPerception2>(DateTime timestamp)
     {
         throw new NotImplementedException();
     }
@@ -50,7 +51,7 @@ public class WorldStateQueries : IWorldState
                     break;
                 }
 
-                perspectiveSequenceHead = WorldEventStore.LookupSequencePosition(happening.previous);
+                perspectiveSequenceHead = PerspectiveSequenceStore.LookupSequencePosition(happening.previous);
             } else {
                 // No more observations (first node of linked list)
                 Debug.Assert(perspectiveSequenceHead == DataModel.PerspectiveSequenceHead.Empty, "PerspectiveSequenceHead should have only two union cases: Empty | Happening");

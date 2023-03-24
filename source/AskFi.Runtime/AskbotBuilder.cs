@@ -1,4 +1,4 @@
-using StrategyDelegate = System.Func<AskFi.Sdk.StrategyReflection, AskFi.Sdk.WorldState, AskFi.Sdk.Decision>;
+using StrategyDelegate = System.Func<AskFi.Sdk.StrategyReflection, AskFi.Sdk.Perspective, AskFi.Sdk.Decision>;
 
 namespace AskFi.Runtime;
 

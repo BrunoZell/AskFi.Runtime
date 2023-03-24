@@ -9,12 +9,12 @@ public class Askbot
 {
     private readonly IReadOnlyDictionary<Type, object> _observers;
     private readonly IReadOnlyDictionary<Type, object> _brokers;
-    private readonly Func<StrategyReflection, WorldState, Decision> _strategy;
+    private readonly Func<StrategyReflection, Perspective, Decision> _strategy;
 
     public Askbot(
         IReadOnlyDictionary<Type, object> observers,
         IReadOnlyDictionary<Type, object> brokers,
-        Func<StrategyReflection, WorldState, Decision> strategy)
+        Func<StrategyReflection, Perspective, Decision> strategy)
     {
         _observers = observers;
         _brokers = brokers;
