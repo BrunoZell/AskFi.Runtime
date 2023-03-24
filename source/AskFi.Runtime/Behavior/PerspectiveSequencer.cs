@@ -9,10 +9,10 @@ namespace AskFi.Runtime.Behavior;
 /// <summary>
 /// A single instance to pipe observations from all <see cref="ObserverSequencer"/> (<see cref="Sdk.IObserver{Perception}"/>)
 /// through in an asycnt way. This is to sequence it in a first-come-first-server way. After new observations
-/// are written to the <see cref="WorldSequencer"/>, their observation order is set, and all conclusions derived are
+/// are written to the <see cref="PerspectiveSequencer"/>, their observation order is set, and all conclusions derived are
 /// deterministic (and thus reproducable) thereafter.
 /// </summary>
-internal class WorldSequencer
+internal class PerspectiveSequencer
 {
     /// <summary>
     /// All <see cref="ObserverSequencer"/> of this session (one per <see cref="Sdk.IObserver{Perception}"/>) write

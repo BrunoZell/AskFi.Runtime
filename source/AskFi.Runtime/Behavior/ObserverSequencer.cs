@@ -7,7 +7,7 @@ namespace AskFi.Runtime.Behavior;
 /// <summary>
 /// Wraps an <see cref="Sdk.IObserver{Perception}"/> and does basic bookkeeping around the incomding
 /// observations from that observer. To then forward it to the passed observation sink, which is this
-/// sessions <see cref="WorldSequencer"/>.
+/// sessions <see cref="PerspectiveSequencer"/>.
 /// </summary>
 internal class ObserverSequencer : IAsyncDisposable
 {
@@ -33,7 +33,7 @@ internal class ObserverSequencer : IAsyncDisposable
     /// <summary>
     /// This background tasks interates <see cref="Sdk.IObserver{T}.Observations"/> (once per observer instance)
     /// and sequences it into an <see cref="ObservationStreamHead{Perception}"/>.
-    /// The new latest <see cref="ObservationStreamHead{Perception}"/> is then passed to the <see cref="WorldSequencer"/> for session-wide sequencing.
+    /// The new latest <see cref="ObservationStreamHead{Perception}"/> is then passed to the <see cref="PerspectiveSequencer"/> for session-wide sequencing.
     /// </summary>
     private static async Task PullObservations<TPerception>(
         Sdk.IObserver<TPerception> observer,

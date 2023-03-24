@@ -25,16 +25,16 @@ public class Askbot
     {
         await Task.Yield();
 
-        var worldSequencer = new WorldSequencer();
+        var perspectiveSequencer = new PerspectiveSequencer();
         var observerSequencers = _observers
-            .Select(o => StartObserverSequencer(o.Key, o.Value, worldSequencer, sessionShutdown))
+            .Select(o => StartObserverSequencer(o.Key, o.Value, perspectiveSequencer, sessionShutdown))
             .ToImmutableList();
 
-        var sessionController = new SessionController(worldSequencer, _strategy, _brokers);
+        var sessionController = new SessionController(perspectiveSequencer, _strategy, _brokers);
         await sessionController.Run(sessionShutdown);
     }
 
-    private static ObserverSequencer StartObserverSequencer(/*'P*/ Type perception, /*IObserver<'P>*/ object observer, WorldSequencer worldSequencer, CancellationToken sessionShutdown)
+    private static ObserverSequencer StartObserverSequencer(/*'P*/ Type perception, /*IObserver<'P>*/ object observer, PerspectiveSequencer worldSequencer, CancellationToken sessionShutdown)
     {
         var startNew = typeof(ObserverSequencer).GetMethod(nameof(ObserverSequencer.StartNew))!;
         var startNewP = startNew.MakeGenericMethod(perception);

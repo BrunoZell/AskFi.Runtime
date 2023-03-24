@@ -4,16 +4,16 @@ namespace AskFi.Runtime.Behavior;
 
 internal class SessionController
 {
-    private readonly WorldSequencer _worldSequencer;
+    private readonly PerspectiveSequencer _perspectiveSequencer;
     private readonly Func<StrategyReflection, WorldState, Decision> _strategy;
     private readonly IReadOnlyDictionary<Type, object> _brokers;
 
     public SessionController(
-        WorldSequencer worldSequencer,
+        PerspectiveSequencer perspectiveSequencer,
         Func<StrategyReflection, WorldState, Decision> strategy,
         IReadOnlyDictionary<Type, object> brokers)
     {
-        _worldSequencer = worldSequencer;
+        _perspectiveSequencer = perspectiveSequencer;
         _strategy = strategy;
         _brokers = brokers;
     }
@@ -22,9 +22,9 @@ internal class SessionController
     {
         var initiatedActions = new HashSet<ActionId>();
 
-        await foreach (var trigger in _worldSequencer.Sequence().WithCancellation(sessionShutdown)) {
+        await foreach (var perspective in _perspectiveSequencer.Sequence().WithCancellation(sessionShutdown)) {
             var reflection = new StrategyReflection(initiatedActions.ToArray());
-            var decision = _strategy(reflection, trigger); // evaluating a strategy runs all required queries
+            var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries
 
             if (decision is Decision.Initiate initiate) {
                 // Strategy decided to do something.

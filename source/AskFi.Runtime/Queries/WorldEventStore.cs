@@ -21,7 +21,7 @@ internal static class WorldEventStore
         LookupSequencePosition(worldState.HashOfLatestWorldEventSequence);
 
     /// <summary>
-    /// Called by <see cref="Behavior.WorldSequencer"/> on every new observation.
+    /// Called by <see cref="Behavior.PerspectiveSequencer"/> on every new observation.
     /// </summary>
     /// <param name="eventSequence">The latest <see cref="WorldEventSequence"/> with the new observation as its head.</param>
     internal static int Store(WorldEventSequence eventSequence)
