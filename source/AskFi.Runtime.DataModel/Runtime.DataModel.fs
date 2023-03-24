@@ -2,6 +2,12 @@ module AskFi.Runtime.DataModel
 
 open System
 
+// ############################
+// #### OBSERVER SUBSYSTEM ####
+// ############################
+
+/// Raw data structure produced by an Observer instance.
+/// All new information received via this Observer instance is referenced in this tree.
 type ObservationSequenceHead<'Perception> =
     | Beginning
     | Observation of Observation<'Perception>
@@ -15,6 +21,10 @@ and Observation<'Perception> = {
     /// For all consecutive observations, this links to the previous observation, forming a linked list.
     Previous: ObservationSequenceHead<'Perception>
 }
+
+// ###########################
+// #### SESSION SUBSYSTEM ####
+// ###########################
 
 type Timestamp = DateTime
 
