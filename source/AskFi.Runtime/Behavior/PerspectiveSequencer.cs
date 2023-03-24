@@ -45,7 +45,7 @@ internal class PerspectiveSequencer
             eventSequenceHash = PerspectiveSequenceStore.Store(eventSequence);
 
             var latestEventSequenceHash = eventSequence.GetHashCode();
-            var state = new Perspective(latestEventSequenceHash);
+            var state = new Perspective(latestEventSequenceHash, query: null);
             yield return state;
         }
     }
