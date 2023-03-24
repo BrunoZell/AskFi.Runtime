@@ -32,8 +32,8 @@ internal class ObserverSequencer : IAsyncDisposable
 
     /// <summary>
     /// This background tasks interates <see cref="Sdk.IObserver{T}.Observations"/> (once per observer instance)
-    /// and sequences it into an <see cref="ObservationStreamHead{Perception}"/>.
-    /// The new latest <see cref="ObservationStreamHead{Perception}"/> is then passed to the <see cref="PerspectiveSequencer"/> for session-wide sequencing.
+    /// and sequences it into an <see cref="ObservationSequenceHead{Perception}"/>.
+    /// The new latest <see cref="ObservationSequenceHead{Perception}"/> is then passed to the <see cref="PerspectiveSequencer"/> for session-wide sequencing.
     /// </summary>
     private static async Task PullObservations<TPerception>(
         Sdk.IObserver<TPerception> observer,
@@ -43,17 +43,17 @@ internal class ObserverSequencer : IAsyncDisposable
         await Task.Yield();
 
         try {
-            var streamHead = ObservationStreamHead<TPerception>.Beginning;
+            var streamHead = ObservationSequenceHead<TPerception>.Beginning;
             await foreach (var observation in observer.Observations.WithCancellation(cancellationToken)) {
                 var sequencedObservation = new Observation<TPerception>(observation.Perceptions, previous: streamHead);
-                streamHead = ObservationStreamHead<TPerception>.NewObservation(sequencedObservation);
+                streamHead = ObservationSequenceHead<TPerception>.NewObservation(sequencedObservation);
 
                 // Todo: Send to persistence subsystem to serialize, put & pin in IPFS cluster. + insertig according metadata in etcd
                 // Todo: Maybe also eagerly build an index of observation session correlations: ObservationSession -> Observation<_> list
 
                 await observationSink.WriteAsync(new OnNewObservation() {
                     PerceptionType = typeof(TPerception),
-                    ObservationStreamHead = streamHead,
+                    ObservationSequenceHead = streamHead,
                     Session = new ObservationSessionKey() {
                         ObserverInstance = observer,
                         ObserverProvidedSessionKey = observation.Session,

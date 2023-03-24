@@ -26,20 +26,20 @@ internal class PerspectiveSequencer
     public ChannelWriter<OnNewObservation> ObservationSink => _incomingObservations.Writer;
 
     /// <summary>
-    /// Long-running background task that reads all pooled new observations and builds the <see cref="WorldEventSequence"/> of this session,
+    /// Long-running background task that reads all pooled new observations and builds the <see cref="PerspectiveSequenceHead"/> of this session,
     /// then wraps it into a <see cref="WorldState"/> and returns it.
     /// </summary>
     public async IAsyncEnumerable<WorldState> Sequence()
     {
-        var eventSequence = WorldEventSequence.Empty;
+        var eventSequence = PerspectiveSequenceHead.Empty;
         var eventSequenceHash = 0;
 
         await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync()) {
             var timestamp = DateTime.UtcNow;
-            var latestObservationStreamHead = newObservation.ObservationStreamHead;
+            var latestObservationSequenceHead = newObservation.ObservationSequenceHead;
 
             // Append happening to this worlds event sequence
-            eventSequence = WorldEventSequence.NewHappening(timestamp, _previous: eventSequenceHash, _nonce: 0ul, latestObservationStreamHead);
+            eventSequence = PerspectiveSequenceHead.NewHappening(timestamp, _previous: eventSequenceHash, _nonce: 0ul, latestObservationSequenceHead);
 
             // Persist and implicitly publish to downstream query system (to later query by hash if desired)
             eventSequenceHash = WorldEventStore.Store(eventSequence);

@@ -5,26 +5,26 @@ namespace AskFi.Runtime.Queries;
 
 internal static class WorldEventStore
 {
-    private static readonly ConcurrentDictionary<int, WorldEventSequence> History = new();
+    private static readonly ConcurrentDictionary<int, PerspectiveSequenceHead> History = new();
 
     /// <inheritdoc cref="LookupSequencePosition(Sdk.WorldState)"/>
-    internal static WorldEventSequence LookupSequencePosition(int worldEventSequenceHash)
+    internal static PerspectiveSequenceHead LookupSequencePosition(int perspectiveSequenceHeadHash)
     {
-        return History[worldEventSequenceHash];
+        return History[perspectiveSequenceHeadHash];
     }
 
     /// <summary>
-    /// Looks up the underlying <see cref="WorldEventSequence"/> behind the passed <paramref name="worldState"/>.
-    /// Throws if the <see cref="WorldEventSequence"/> has not been inserted via <see cref="Store(WorldEventSequence)"/> first.
+    /// Looks up the underlying <see cref="PerspectiveSequenceHead"/> behind the passed <paramref name="worldState"/>.
+    /// Throws if the <see cref="PerspectiveSequenceHead"/> has not been inserted via <see cref="Store(PerspectiveSequenceHead)"/> first.
     /// </summary>
-    internal static WorldEventSequence LookupSequencePosition(Sdk.WorldState worldState) =>
-        LookupSequencePosition(worldState.HashOfLatestWorldEventSequence);
+    internal static PerspectiveSequenceHead LookupSequencePosition(Sdk.WorldState worldState) =>
+        LookupSequencePosition(worldState.HashOfLatestPerspectiveSequenceHead);
 
     /// <summary>
     /// Called by <see cref="Behavior.PerspectiveSequencer"/> on every new observation.
     /// </summary>
-    /// <param name="eventSequence">The latest <see cref="WorldEventSequence"/> with the new observation as its head.</param>
-    internal static int Store(WorldEventSequence eventSequence)
+    /// <param name="eventSequence">The latest <see cref="PerspectiveSequenceHead"/> with the new observation as its head.</param>
+    internal static int Store(PerspectiveSequenceHead eventSequence)
     {
         var hash = eventSequence.GetHashCode();
         History.TryAdd(hash, eventSequence);

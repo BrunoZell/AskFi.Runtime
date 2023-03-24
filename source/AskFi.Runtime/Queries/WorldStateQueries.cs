@@ -21,8 +21,8 @@ public class WorldStateQueries : IWorldState
 
         foreach (var observation in Since(tree, timestamp)) {
             // Only reuturn observations of requested type TPerception
-            if (observation.observationStreamHead is DataModel.ObservationStreamHead<TPerception>.Observation relevantObservation) {
-                yield return relevantObservation.Item.Observations;
+            if (observation.observationStreamHead is DataModel.ObservationSequenceHead<TPerception>.Observation relevantObservation) {
+                yield return relevantObservation.Item.Observation;
             }
         }
     }
@@ -32,16 +32,16 @@ public class WorldStateQueries : IWorldState
         throw new NotImplementedException();
     }
 
-    private static IEnumerable<DataModel.WorldEventSequence.Happening> Since(DataModel.WorldEventSequence worldEventSequence, DateTime since)
+    private static IEnumerable<DataModel.PerspectiveSequenceHead.Happening> Since(DataModel.PerspectiveSequenceHead perspectiveSequenceHead, DateTime since)
     {
         // This is to buffer all observations that happens after 'since' until the first observation is inspected that came before 'since'.
         // This means that before anything is returned, all requested observations are loaded into memory.
         // Todo: to optimize this, the runtime should eagerly build the reversed linked list and provide an index into all nodes via a timestamp.
         // Then only a tree-node is returned and the iteration of it is on the user.
-        var selectedObservations = new List<DataModel.WorldEventSequence.Happening>();
+        var selectedObservations = new List<DataModel.PerspectiveSequenceHead.Happening>();
 
         while (true) {
-            if (worldEventSequence is DataModel.WorldEventSequence.Happening happening) {
+            if (perspectiveSequenceHead is DataModel.PerspectiveSequenceHead.Happening happening) {
                 if (happening.at > since) {
                     selectedObservations.Add(happening);
                 } else {
@@ -50,10 +50,10 @@ public class WorldStateQueries : IWorldState
                     break;
                 }
 
-                worldEventSequence = WorldEventStore.LookupSequencePosition(happening.previous);
+                perspectiveSequenceHead = WorldEventStore.LookupSequencePosition(happening.previous);
             } else {
                 // No more observations (first node of linked list)
-                Debug.Assert(worldEventSequence == DataModel.WorldEventSequence.Empty, "WorldEventSequence should have only two union cases: Empty | Happening");
+                Debug.Assert(perspectiveSequenceHead == DataModel.PerspectiveSequenceHead.Empty, "PerspectiveSequenceHead should have only two union cases: Empty | Happening");
                 break;
             }
         }
