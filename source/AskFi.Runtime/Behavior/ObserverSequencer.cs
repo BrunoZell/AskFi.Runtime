@@ -5,7 +5,7 @@ using static AskFi.Runtime.DataModel;
 namespace AskFi.Runtime.Behavior;
 
 /// <summary>
-/// Wraps an <see cref="Sdk.IObserver{Perception}"/> and does basic bookkeeping around the incomding
+/// Wraps an <see cref="Sdk.IObserver{Perception}"/> and does basic bookkeeping around the incoming
 /// observations from that observer. To then forward it to the passed observation sink, which is this
 /// sessions <see cref="PerspectiveSequencer"/>.
 /// </summary>
@@ -31,7 +31,7 @@ internal class ObserverSequencer : IAsyncDisposable
     }
 
     /// <summary>
-    /// This background tasks interates <see cref="Sdk.IObserver{T}.Observations"/> (once per observer instance)
+    /// This background tasks iterates <see cref="Sdk.IObserver{T}.Observations"/> (once per observer instance)
     /// and sequences it into an <see cref="ObservationSequenceHead{Perception}"/>.
     /// The new latest <see cref="ObservationSequenceHead{Perception}"/> is then passed to the <see cref="PerspectiveSequencer"/> for session-wide sequencing.
     /// </summary>
@@ -48,7 +48,7 @@ internal class ObserverSequencer : IAsyncDisposable
                 var observationSequenceNode = new ObservationSequenceNode<TPerception>(observation, streamHead);
                 streamHead = ObservationSequenceHead<TPerception>.NewObservation(observationSequenceNode);
 
-                // Todo: Send to persistence subsystem to serialize, put & pin in IPFS cluster. + insertig according metadata in etcd
+                // Todo: Send to persistence subsystem to serialize, put & pin in IPFS cluster. + inserting according metadata in etcd
                 // Todo: Build indices for chronological and continuous sorting
 
                 await observationSink.WriteAsync(new NewSequencedObservation() {
@@ -71,6 +71,6 @@ internal class ObserverSequencer : IAsyncDisposable
     {
         _cancellation.Cancel();
         _cancellation.Dispose();
-        await _backgroundTask; // To throw and observe possible excpetions.
+        await _backgroundTask; // To throw and observe possible exceptions.
     }
 }
