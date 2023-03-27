@@ -32,7 +32,7 @@ internal class PerspectiveSequencer
     public async IAsyncEnumerable<Perspective> Sequence()
     {
         var perspectiveSequence = PerspectiveSequenceHead.Empty;
-        var perspectiveSequenceHash = PreviousPerspectiveHash.None;
+        var perspectiveSequenceHash = PerspectiveSequenceStore.Store(perspectiveSequence);
 
         await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync()) {
             var timestamp = DateTime.UtcNow;
