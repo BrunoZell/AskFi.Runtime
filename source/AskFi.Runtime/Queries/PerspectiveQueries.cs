@@ -21,7 +21,7 @@ public class PerspectiveQueries : IPerspectiveQueries
         var tree = PerspectiveSequenceStore.LookupSequencePosition(_perspective);
 
         foreach (var observation in Since(tree, timestamp)) {
-            // Only reuturn observations of requested type TPerception
+            // Only return observations of requested type TPerception
             if (observation.observationStreamHead is DataModel.ObservationSequenceHead<TPerception>.Observation relevantObservation) {
                 yield return relevantObservation.Item.Observation;
             }
