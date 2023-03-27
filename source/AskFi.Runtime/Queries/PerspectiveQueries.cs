@@ -51,7 +51,7 @@ public sealed class PerspectiveQueries : IPerspectiveQueries
                     break;
                 }
 
-                perspectiveSequenceHead = PerspectiveSequenceStore.LookupSequencePosition(happening.previous);
+                perspectiveSequenceHead = PerspectiveSequenceStore.LookupSequencePosition(happening.previous.raw);
             } else {
                 // No more observations (first node of linked list)
                 Debug.Assert(perspectiveSequenceHead == DataModel.PerspectiveSequenceHead.Empty, "PerspectiveSequenceHead should have only two union cases: Empty | Happening");

@@ -23,11 +23,12 @@ internal static class PerspectiveSequenceStore
     /// <summary>
     /// Called by <see cref="Behavior.PerspectiveSequencer"/> on every new observation.
     /// </summary>
-    /// <param name="eventSequence">The latest <see cref="PerspectiveSequenceHead"/> with the new observation as its head.</param>
-    internal static int Store(PerspectiveSequenceHead eventSequence)
+    /// <param name="perspectiveSequence">The latest <see cref="PerspectiveSequenceHead"/> with the new observation as its head.</param>
+    internal static PreviousPerspectiveHash Store(PerspectiveSequenceHead perspectiveSequence)
     {
-        var hash = eventSequence.GetHashCode();
-        History.TryAdd(hash, eventSequence);
+        var rawHash = perspectiveSequence.GetHashCode();
+        History.TryAdd(rawHash, perspectiveSequence);
+        var hash = PreviousPerspectiveHash.NewHash(rawHash);
         return hash;
     }
 }

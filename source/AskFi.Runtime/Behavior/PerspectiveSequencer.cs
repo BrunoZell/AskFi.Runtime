@@ -32,7 +32,7 @@ internal class PerspectiveSequencer
     public async IAsyncEnumerable<Perspective> Sequence()
     {
         var perspectiveSequence = PerspectiveSequenceHead.Empty;
-        var perspectiveSequenceHash = 0;
+        var perspectiveSequenceHash = PreviousPerspectiveHash.None;
 
         await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync()) {
             var timestamp = DateTime.UtcNow;
@@ -44,7 +44,7 @@ internal class PerspectiveSequencer
             // Persist and implicitly publish to downstream query system (to later query by hash if desired)
             perspectiveSequenceHash = PerspectiveSequenceStore.Store(perspectiveSequence);
 
-            var perspective = new Perspective(perspectiveSequenceHash, new PerspectiveQueries(perspectiveSequenceHash));
+            var perspective = new Perspective(perspectiveSequenceHash.raw, new PerspectiveQueries(perspectiveSequenceHash.raw));
             yield return perspective;
         }
     }
