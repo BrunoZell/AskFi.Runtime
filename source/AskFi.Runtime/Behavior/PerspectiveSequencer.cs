@@ -8,9 +8,9 @@ namespace AskFi.Runtime.Behavior;
 
 /// <summary>
 /// A single instance to pipe observations from all <see cref="ObserverSequencer"/> (<see cref="Sdk.IObserver{Perception}"/>)
-/// through in an asycnt way. This is to sequence it in a first-come-first-server way. After new observations
+/// through in an async way. This is to sequence it in a first-come-first-server way. After new observations
 /// are written to the <see cref="PerspectiveSequencer"/>, their observation order is set, and all conclusions derived are
-/// deterministic (and thus reproducable) thereafter.
+/// deterministic (and thus reproducible) thereafter.
 /// </summary>
 internal class PerspectiveSequencer
 {
@@ -31,7 +31,7 @@ internal class PerspectiveSequencer
     /// </summary>
     public async IAsyncEnumerable<Perspective> Sequence()
     {
-        var eventSequence = PerspectiveSequenceHead.Empty;
+        var perspectiveSequence = PerspectiveSequenceHead.Empty;
         var eventSequenceHash = 0;
 
         await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync()) {
@@ -39,14 +39,14 @@ internal class PerspectiveSequencer
             var latestObservationSequenceHead = newObservation.ObservationSequenceHead;
 
             // Append happening to this worlds event sequence
-            eventSequence = PerspectiveSequenceHead.NewHappening(timestamp, _previous: eventSequenceHash, latestObservationSequenceHead);
+            perspectiveSequence = PerspectiveSequenceHead.NewHappening(timestamp, _previous: eventSequenceHash, latestObservationSequenceHead);
 
             // Persist and implicitly publish to downstream query system (to later query by hash if desired)
-            eventSequenceHash = PerspectiveSequenceStore.Store(eventSequence);
+            eventSequenceHash = PerspectiveSequenceStore.Store(perspectiveSequence);
 
-            var latestEventSequenceHash = eventSequence.GetHashCode();
-            var state = new Perspective(latestEventSequenceHash, query: null);
-            yield return state;
+            var latestPerspectiveSequenceHash = perspectiveSequence.GetHashCode();
+            var perspective = new Perspective(latestPerspectiveSequenceHash, new PerspectiveQueries(latestPerspectiveSequenceHash));
+            yield return perspective;
         }
     }
 }

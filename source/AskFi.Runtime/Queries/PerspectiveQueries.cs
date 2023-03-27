@@ -4,12 +4,12 @@ using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Queries;
 
-public class PerspectiveQueries : IPerspectiveQueries
+public sealed class PerspectiveQueries : IPerspectiveQueries
 {
-    private readonly Perspective _perspective;
+    private readonly int _latestPerspectiveSequenceHash;
 
-    public PerspectiveQueries(Perspective perspective) =>
-        _perspective = perspective;
+    public PerspectiveQueries(int latestPerspectiveSequenceHash) =>
+        _latestPerspectiveSequenceHash = latestPerspectiveSequenceHash;
 
     public FSharpOption<Observation<TPerception>> latest<TPerception>()
     {
@@ -18,7 +18,7 @@ public class PerspectiveQueries : IPerspectiveQueries
 
     public IEnumerable<Observation<TPerception>> since<TPerception>(DateTime timestamp)
     {
-        var tree = PerspectiveSequenceStore.LookupSequencePosition(_perspective);
+        var tree = PerspectiveSequenceStore.LookupSequencePosition(_latestPerspectiveSequenceHash);
 
         foreach (var observation in Since(tree, timestamp)) {
             // Only return observations of requested type TPerception
