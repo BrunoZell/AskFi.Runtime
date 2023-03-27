@@ -20,9 +20,9 @@ public sealed class PerspectiveQueries : IPerspectiveQueries
     {
         var tree = PerspectiveSequenceStore.LookupSequencePosition(_latestPerspectiveSequenceHash);
 
-        foreach (var observation in Since(tree, timestamp)) {
+        foreach (var happening in LatestObservationTreeHeadsSince(tree, timestamp)) {
             // Only return observations of requested type TPerception
-            if (observation.observationStreamHead is DataModel.ObservationSequenceHead<TPerception>.Observation relevantObservation) {
+            if (happening.observationStreamHead is DataModel.ObservationSequenceHead<TPerception>.Observation relevantObservation) {
                 yield return relevantObservation.Item.Observation;
             }
         }
@@ -33,7 +33,7 @@ public sealed class PerspectiveQueries : IPerspectiveQueries
         throw new NotImplementedException();
     }
 
-    private static IEnumerable<DataModel.PerspectiveSequenceHead.Happening> Since(DataModel.PerspectiveSequenceHead perspectiveSequenceHead, DateTime since)
+    private static IEnumerable<DataModel.PerspectiveSequenceHead.Happening> LatestObservationTreeHeadsSince(DataModel.PerspectiveSequenceHead perspectiveSequenceHead, DateTime since)
     {
         // This is to buffer all observations that happens after 'since' until the first observation is inspected that came before 'since'.
         // This means that before anything is returned, all requested observations are loaded into memory.
