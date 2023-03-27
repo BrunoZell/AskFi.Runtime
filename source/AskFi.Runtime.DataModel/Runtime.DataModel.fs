@@ -35,7 +35,7 @@ type PerspectiveHash = int32
 
 /// Updates to multiple Observation Sequences are sequenced with each other into a Perspective Sequence.
 /// This defines an ordering between observations from different Observation Sequences (and implicitly, different IObserver-instances)
-/// and merges them into a single sequence of observations (accorss all Perception-types).
+/// and merges them into a single sequence of observations (across all Perception-types).
 type PerspectiveSequenceHead =
     | Empty
     | Happening of at:Timestamp (*as of runtime clock*) * previous:PerspectiveHash * observationStreamHead:obj // actually ObservationSequenceHead<_> of all possible types. Todo: implement as recursion scheme
