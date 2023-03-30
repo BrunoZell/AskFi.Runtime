@@ -70,7 +70,7 @@ public static class Base32
         if (encoded == null)
             throw new ArgumentNullException(nameof(encoded));
 
-        // Remove whitespace and padding. Note: the padding is used as hint 
+        // Remove whitespace and padding. Note: the padding is used as hint
         // to determine how many bits to decode from the last incomplete chunk
         // Also, canonicalize to all upper case
         encoded = encoded.Trim().TrimEnd('=').ToUpper(CultureInfo.InvariantCulture);
@@ -102,12 +102,12 @@ public static class Base32
         return result;
     }
 
-    public static string ToBase32String(byte[] data, bool padOutput = false)
+    public static string ToBase32String(ReadOnlySpan<byte> data, bool padOutput = false)
     {
         return ToBase32String(data, 0, data.Length, padOutput);
     }
 
-    public static string ToBase32String(byte[] data, int offset, int length, bool padOutput = false)
+    public static string ToBase32String(ReadOnlySpan<byte> data, int offset, int length, bool padOutput = false)
     {
         if (data == null)
             throw new ArgumentNullException(nameof(data));
