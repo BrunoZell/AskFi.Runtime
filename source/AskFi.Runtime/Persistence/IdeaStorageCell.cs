@@ -10,7 +10,7 @@ internal class IdeaStorageCell
     /// <summary>
     /// Cache after deserialization
     /// </summary>
-    private WeakReference _inMemoryIdea = new(target: null);
+    private readonly WeakReference _inMemoryIdea = new(target: null);
 
     public IdeaStorageCell(ContentId contentId, IStorageEnvironment storageEnvironment)
     {
