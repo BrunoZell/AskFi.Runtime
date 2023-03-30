@@ -1,8 +1,8 @@
 module AskFi.Runtime.DataModel
 
 open AskFi
-open System.Runtime.CompilerServices
 open System
+open AskFi.Sdk
 
 // ############################
 // #### OBSERVER SUBSYSTEM ####
@@ -30,14 +30,9 @@ and ObservationSequenceNode<'Perception> = {
 
 type Timestamp = DateTime
 
-/// The hash that's used in CIDs referring to an instance of PerspectiveSequenceHead.
-/// It's a 32 bit signed integer (for now) to be compatible with .NETs object.GetHashCode().
-[<IsReadOnly; Struct>]
-type PerspectiveHash = Hash of raw:int32
-
 /// Updates to multiple Observation Sequences are sequenced with each other into a Perspective Sequence.
 /// This defines an ordering between observations from different Observation Sequences (and implicitly, different IObserver-instances)
 /// and merges them into a single sequence of observations (across all Perception-types).
 type PerspectiveSequenceHead =
     | Empty
-    | Happening of at:Timestamp (*as of runtime clock*) * previous:PerspectiveHash * observationStreamHead:obj // actually ObservationSequenceHead<_> of all possible types. Todo: implement as recursion scheme
+    | Happening of at:Timestamp (*as of runtime clock*) * previous:ContentId * observationStreamHead:ContentId // actually ObservationSequenceHead<_> of all possible types. Todo: implement as recursion scheme
