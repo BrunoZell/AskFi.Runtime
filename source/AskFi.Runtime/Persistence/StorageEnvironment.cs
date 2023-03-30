@@ -2,7 +2,7 @@ using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Persistence;
 
-public class StorageEnvironment : IStorageEnvironment
+internal class StorageEnvironment : IStorageEnvironment
 {
     private readonly DirectoryInfo _localStoragePath;
     private readonly Uri _ipfsClusterUrl;

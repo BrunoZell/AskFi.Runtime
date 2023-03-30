@@ -22,7 +22,7 @@ using System.Text;
 
 namespace AskFi.Runtime.Persistence;
 
-public static class Base32
+internal static class Base32
 {
     private static readonly char[] Digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".ToCharArray();
     private const int Mask = 31;

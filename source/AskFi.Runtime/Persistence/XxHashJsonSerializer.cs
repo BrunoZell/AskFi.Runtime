@@ -1,12 +1,11 @@
 using System.Text;
 using System.Text.Json;
-using Microsoft.FSharp.Core;
 using Standart.Hash.xxHash;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Persistence;
 
-public class XxHashJsonSerializer : Serializer
+internal class XxHashJsonSerializer : Serializer
 {
     public EncodedIdea serialize<TIdea>(TIdea value)
     {
@@ -15,10 +14,10 @@ public class XxHashJsonSerializer : Serializer
         var hash = xxHash128.ComputeHash(bytes, bytes.Length).ToBytes();
 
         return new EncodedIdea(
-            cid: ContentId.NewContentId(hash),
+            cid: new ContentId(hash),
             content: bytes);
     }
 
-    public FSharpOption<TIdea> deserialize<TIdea>(EncodedIdea value) =>
+    public TIdea deserialize<TIdea>(EncodedIdea value) =>
         throw new NotImplementedException();
 }
