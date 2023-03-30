@@ -1,5 +1,5 @@
 using System.Threading.Channels;
-using AskFi.Runtime.Objects;
+using AskFi.Runtime.Observation.Objects;
 using AskFi.Runtime.Queries;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;

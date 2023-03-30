@@ -1,4 +1,4 @@
-namespace AskFi.Runtime.Objects;
+namespace AskFi.Runtime.Observation.Objects;
 
 /// <summary>
 /// Event payload for event raised on new observations from an IObserver-instance.
