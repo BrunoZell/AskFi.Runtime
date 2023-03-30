@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Standart.Hash.xxHash" Version="4.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\sdk\source\AskFi.Sdk.fsproj" />
     <ProjectReference Include="..\AskFi.Runtime.DataModel\AskFi.Runtime.DataModel.fsproj" />
   </ItemGroup>
