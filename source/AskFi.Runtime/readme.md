@@ -9,3 +9,5 @@ On the Askbot instance, `Askbot.Run` can be called to start the instance. When c
 - A `SessionController` is created, which:
   - executes the _Strategy_ every time an _Observation_ is perceived
   - in case the _Strategy_ outputs a decision to initiate one or more _Actions_, those intents are routed to the according _Brokers_ (if configured)
+
+Read more docs [here](../../docs/runtime.md).
