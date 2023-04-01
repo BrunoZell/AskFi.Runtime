@@ -1,4 +1,6 @@
-namespace AskFi.Runtime.Objects;
+using AskFi.Persistence;
+
+namespace AskFi.Runtime.Observation.Objects;
 
 /// <summary>
 /// Event payload for event raised on new observations from an IObserver-instance.
@@ -14,12 +16,7 @@ internal class NewSequencedObservation
     public required Type PerceptionType { get; init; }
 
     /// <summary>
-    /// Of type ObservationSequenceHead<this.PerceptionType> with this.Observation as first node
+    /// Cid to the latest ObservationSequenceHead<this.PerceptionType> with new observation as first node
     /// </summary>
-    public required object ObservationSequenceHead { get; init; }
-
-    /// <summary>
-    /// Of type Sdk.Observation<this.PerceptionType>
-    /// </summary>
-    public required object Observation { get; init; }
+    public required ContentId ObservationSequenceHeadCid { get; init; }
 }

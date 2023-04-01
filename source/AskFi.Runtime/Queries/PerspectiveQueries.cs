@@ -1,15 +1,23 @@
 using System.Diagnostics;
+using AskFi.Persistence;
+using AskFi.Runtime.Internal;
+using AskFi.Runtime.Persistence;
 using Microsoft.FSharp.Core;
+using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Queries;
 
-public sealed class PerspectiveQueries : IPerspectiveQueries
+internal sealed class PerspectiveQueries : IPerspectiveQueries
 {
-    private readonly int _latestPerspectiveSequenceHash;
+    private readonly ContentId _latestPerspectiveSequenceCid;
+    private readonly IdeaStore _ideaStore;
 
-    public PerspectiveQueries(int latestPerspectiveSequenceHash) =>
-        _latestPerspectiveSequenceHash = latestPerspectiveSequenceHash;
+    public PerspectiveQueries(ContentId latestPerspectiveSequenceCid, IdeaStore ideaStore)
+    {
+        _latestPerspectiveSequenceCid = latestPerspectiveSequenceCid;
+        _ideaStore = ideaStore;
+    }
 
     public FSharpOption<Observation<TPerception>> latest<TPerception>()
     {
@@ -18,12 +26,28 @@ public sealed class PerspectiveQueries : IPerspectiveQueries
 
     public IEnumerable<Observation<TPerception>> since<TPerception>(DateTime timestamp)
     {
-        var tree = PerspectiveSequenceStore.LookupSequencePosition(_latestPerspectiveSequenceHash);
+        PerspectiveSequenceHead latestPerspectiveSequence;
 
-        foreach (var happening in LatestObservationTreeHeadsSince(tree, timestamp)) {
-            // Only return observations of requested type TPerception
-            if (happening.observationStreamHead is DataModel.ObservationSequenceHead<TPerception>.Observation relevantObservation) {
-                yield return relevantObservation.Item.Observation;
+        using (NoSynchronizationContextScope.Enter()) {
+            latestPerspectiveSequence = _ideaStore.Load<PerspectiveSequenceHead>(_latestPerspectiveSequenceCid).Result;
+        }
+
+        foreach (var happening in LatestObservationTreeHeadsSince(latestPerspectiveSequence, timestamp)) {
+            // Only return observations of requested type TPerception. Ignore all others.
+            if (happening.Item.ObservationPerceptionType != typeof(TPerception)) {
+                continue;
+            }
+
+            // Load latest node in observation sequence.
+            ObservationSequenceHead<TPerception> observationSequenceHead;
+
+            using (NoSynchronizationContextScope.Enter()) {
+                observationSequenceHead = _ideaStore.Load<ObservationSequenceHead<TPerception>>(happening.Item.ObservationSequenceHead).Result;
+            }
+
+            // If that node is an observation, return its information.
+            if (observationSequenceHead is ObservationSequenceHead<TPerception>.Observation observation) {
+                yield return observation.Item.Observation;
             }
         }
     }
@@ -33,17 +57,17 @@ public sealed class PerspectiveQueries : IPerspectiveQueries
         throw new NotImplementedException();
     }
 
-    private static IEnumerable<DataModel.PerspectiveSequenceHead.Happening> LatestObservationTreeHeadsSince(DataModel.PerspectiveSequenceHead perspectiveSequenceHead, DateTime since)
+    private IReadOnlyList<PerspectiveSequenceHead.Happening> LatestObservationTreeHeadsSince(PerspectiveSequenceHead perspectiveSequenceHead, DateTime since)
     {
         // This is to buffer all observations that happens after 'since' until the first observation is inspected that came before 'since'.
         // This means that before anything is returned, all requested observations are loaded into memory.
         // Todo: to optimize this, the runtime should eagerly build the reversed linked list and provide an index into all nodes via a timestamp.
         // Then only a tree-node is returned and the iteration of it is on the user.
-        var selectedObservations = new List<DataModel.PerspectiveSequenceHead.Happening>();
+        var selectedObservations = new List<PerspectiveSequenceHead.Happening>();
 
         while (true) {
-            if (perspectiveSequenceHead is DataModel.PerspectiveSequenceHead.Happening happening) {
-                if (happening.at > since) {
+            if (perspectiveSequenceHead is PerspectiveSequenceHead.Happening happening) {
+                if (happening.Item.At > since) {
                     selectedObservations.Add(happening);
                 } else {
                     // Found first observation earlier than 'since'.
@@ -51,10 +75,12 @@ public sealed class PerspectiveQueries : IPerspectiveQueries
                     break;
                 }
 
-                perspectiveSequenceHead = PerspectiveSequenceStore.LookupSequencePosition(happening.previous.raw);
+                using (NoSynchronizationContextScope.Enter()) {
+                    perspectiveSequenceHead = _ideaStore.Load<PerspectiveSequenceHead>(happening.Item.Previous).Result;
+                }
             } else {
                 // No more observations (first node of linked list)
-                Debug.Assert(perspectiveSequenceHead == DataModel.PerspectiveSequenceHead.Empty, "PerspectiveSequenceHead should have only two union cases: Empty | Happening");
+                Debug.Assert(perspectiveSequenceHead == PerspectiveSequenceHead.Empty, "PerspectiveSequenceHead should have only two union cases: Empty | Happening");
                 break;
             }
         }

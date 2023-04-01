@@ -1,5 +1,6 @@
 using System.Threading.Channels;
-using AskFi.Runtime.Objects;
+using AskFi.Runtime.Observation.Objects;
+using AskFi.Runtime.Persistence;
 using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Behavior;
@@ -23,10 +24,11 @@ internal class ObserverSequencer : IAsyncDisposable
     public static ObserverSequencer StartNew<TPerception>(
         Sdk.IObserver<TPerception> observer,
         ChannelWriter<NewSequencedObservation> observationSink,
+        IdeaStore ideaStore,
         CancellationToken sessionShutdown)
     {
         var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(sessionShutdown);
-        var backgroundTask = PullObservations(observer, observationSink, linkedCancellation.Token);
+        var backgroundTask = PullObservations(observer, observationSink, ideaStore, linkedCancellation.Token);
         return new ObserverSequencer(backgroundTask, linkedCancellation);
     }
 
@@ -38,23 +40,28 @@ internal class ObserverSequencer : IAsyncDisposable
     private static async Task PullObservations<TPerception>(
         Sdk.IObserver<TPerception> observer,
         ChannelWriter<NewSequencedObservation> observationSink,
+        IdeaStore ideaStore,
         CancellationToken cancellationToken)
     {
         await Task.Yield();
 
         try {
-            var streamHead = ObservationSequenceHead<TPerception>.Beginning;
-            await foreach (var observation in observer.Observations.WithCancellation(cancellationToken)) {
-                var observationSequenceNode = new ObservationSequenceNode<TPerception>(observation, streamHead);
-                streamHead = ObservationSequenceHead<TPerception>.NewObservation(observationSequenceNode);
+            var observationSequence = ObservationSequenceHead<TPerception>.Beginning;
+            var observationSequenceCid = await ideaStore.Store(observationSequence);
 
-                // Todo: Send to persistence subsystem to serialize, put & pin in IPFS cluster. + inserting according metadata in etcd
+            await foreach (var observation in observer.Observations.WithCancellation(cancellationToken)) {
+                // Build new node onto Observation Sequence
+                var observationSequenceNode = new ObservationSequenceNode<TPerception>(observation, observationSequenceCid);
+                observationSequence = ObservationSequenceHead<TPerception>.NewObservation(observationSequenceNode);
+
+                // Persist new node
+                observationSequenceCid = await ideaStore.Store(observationSequence);
+
                 // Todo: Build indices for chronological and continuous sorting
 
                 await observationSink.WriteAsync(new NewSequencedObservation() {
                     PerceptionType = typeof(TPerception),
-                    ObservationSequenceHead = streamHead,
-                    Observation = observation
+                    ObservationSequenceHeadCid = observationSequenceCid
                 });
             }
 #if DEBUG

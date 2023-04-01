@@ -1,6 +1,7 @@
+using AskFi.Runtime.Behavior;
 using static AskFi.Sdk;
 
-namespace AskFi.Runtime.Behavior;
+namespace AskFi.Runtime;
 
 internal class SessionController
 {
@@ -30,7 +31,7 @@ internal class SessionController
                 // Strategy decided to do something.
                 // Assign all action initiations an id and send to according broker instance
                 foreach (var action in initiate.ActionSet.Initiatives.ToArray()) {
-                    var actionId = ActionId.NewActionId(DateTime.UtcNow, _nonce: 0ul); // Todo: Ensure uniqeness
+                    var actionId = ActionId.NewActionId(DateTime.UtcNow, _nonce: 0ul); // Todo: Ensure uniqueness
                     initiatedActions.Add(actionId);
                     ExecuteAction(actionId, action);
                 }
@@ -40,9 +41,8 @@ internal class SessionController
 
     private void ExecuteAction(ActionId actionId, ActionInitiation actionInitiation)
     {
-        if (!_brokers.TryGetValue(actionInitiation.Type, out var broker)) {
+        if (!_brokers.TryGetValue(actionInitiation.Type, out var broker))
             throw new InvalidOperationException("No broker available that can handle this type of action");
-        }
 
         GenericExecute((dynamic)broker, actionId, actionInitiation.Action);
     }
