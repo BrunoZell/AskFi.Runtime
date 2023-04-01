@@ -46,7 +46,7 @@ internal class StorageEnvironment : IStorageEnvironment
 
     private string BuildFilePath(ContentId contentId)
     {
-        var fullPath = Base32.ToBase32String(contentId.Raw.Span);
+        var fullPath = Base32.ToBase32String(contentId.Raw);
         return Path.Combine(
             fullPath[0..1],
             fullPath[2..3],
