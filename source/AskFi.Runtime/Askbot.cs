@@ -32,18 +32,18 @@ public class Askbot
         var ideaStore = new IdeaStore(defaultSerializer: new XxHashJsonSerializer(), _storageEnvironment);
         var perspectiveSequencer = new PerspectiveSequencer(ideaStore);
         var observerSequencers = _observers
-            .Select(o => StartObserverSequencer(o.Key, o.Value, perspectiveSequencer, sessionShutdown))
+            .Select(o => StartObserverSequencer(o.Key, o.Value, perspectiveSequencer, ideaStore, sessionShutdown))
             .ToImmutableList();
 
         var sessionController = new SessionController(perspectiveSequencer, _strategy, _brokers);
         await sessionController.Run(sessionShutdown);
     }
 
-    private static ObserverSequencer StartObserverSequencer(/*'P*/ Type perception, /*IObserver<'P>*/ object observer, PerspectiveSequencer worldSequencer, CancellationToken sessionShutdown)
+    private static ObserverSequencer StartObserverSequencer(/*'P*/ Type perception, /*IObserver<'P>*/ object observer, PerspectiveSequencer worldSequencer, IdeaStore ideaStore, CancellationToken sessionShutdown)
     {
         var startNew = typeof(ObserverSequencer).GetMethod(nameof(ObserverSequencer.StartNew))!;
         var startNewP = startNew.MakeGenericMethod(perception);
-        var sequencer = startNewP.Invoke(obj: null, new object[] { observer, worldSequencer.ObservationSink, sessionShutdown }) as ObserverSequencer;
+        var sequencer = startNewP.Invoke(obj: null, new object[] { observer, worldSequencer.ObservationSink, ideaStore, sessionShutdown }) as ObserverSequencer;
         Debug.Assert(sequencer is not null, $"Return type of {nameof(ObserverSequencer.StartNew)} changed and now is incompatible with this code.");
         return sequencer;
     }

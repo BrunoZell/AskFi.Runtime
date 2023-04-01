@@ -44,23 +44,18 @@ internal class PerspectiveSequencer
 
         await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync()) {
             var timestamp = DateTime.UtcNow;
-            var newObservationSequenceHead = newObservation.ObservationSequenceHead;
-
-            // Persist and implicitly publish ObservationSequenceHead
-            var observationSequenceHeadCid = await _ideaStore.Store<object>(newObservationSequenceHead);
 
             // Append the updated Observation Sequence as a new happening to the Perspective, as a new sequence head.
             perspectiveSequence = PerspectiveSequenceHead.NewHappening(new PerspectiveSequenceNode(
                 at: timestamp,
                 previous: perspectiveSequenceCid,
-                observationSequenceHead: observationSequenceHeadCid,
+                observationSequenceHead: newObservation.ObservationSequenceHeadCid,
                 observationPerceptionType: newObservation.PerceptionType));
 
             // Persist and implicitly publish to downstream query system (to later query by hash if desired)
             perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
-            var perspective = new Perspective(perspectiveSequenceCid, new PerspectiveQueries(perspectiveSequenceCid, _ideaStore));
-            yield return perspective;
+            yield return new Perspective(perspectiveSequenceCid, new PerspectiveQueries(perspectiveSequenceCid, _ideaStore));
         }
     }
 }

@@ -19,7 +19,7 @@ and ObservationSequenceNode<'Perception> = {
 
     /// Link to the previous observations of this session, forming a linked list and sequencing them.
     /// If this is the first observation of this session, this links to the 'Beginning' union case.
-    Previous: ObservationSequenceHead<'Perception>
+    Previous: ContentId // ObservationSequenceHead<'Perception>
 }
 
 // Todo: Add index trees: ChronologicalObservationSequence, ContinuousObservationSequence, ChronologicalContinuousObservationSequence
