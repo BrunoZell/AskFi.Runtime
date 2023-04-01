@@ -5,9 +5,9 @@ namespace AskFi.Runtime.Persistence;
 internal class StorageEnvironment : IStorageEnvironment
 {
     private readonly DirectoryInfo _localStoragePath;
-    private readonly Uri _ipfsClusterUrl;
+    private readonly Uri? _ipfsClusterUrl;
 
-    public StorageEnvironment(DirectoryInfo localStoragePath, Uri ipfsClusterUrl)
+    public StorageEnvironment(DirectoryInfo localStoragePath, Uri? ipfsClusterUrl = null)
     {
         _localStoragePath = localStoragePath;
         _ipfsClusterUrl = ipfsClusterUrl;
