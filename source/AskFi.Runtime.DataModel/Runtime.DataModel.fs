@@ -2,7 +2,7 @@ module AskFi.Runtime.DataModel
 
 open AskFi
 open System
-open AskFi.Sdk
+open AskFi.Persistence
 
 // ###############################
 // #### OBSERVATION SUBSYSTEM ####
