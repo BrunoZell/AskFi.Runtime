@@ -1,4 +1,4 @@
-using static AskFi.Sdk;
+using AskFi.Persistence;
 
 namespace AskFi.Runtime.Persistence;
 
