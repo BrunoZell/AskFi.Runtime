@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using AskFi.Persistence;
+using AskFi.Runtime.Internal;
 using AskFi.Runtime.Persistence;
 using Microsoft.FSharp.Core;
 using static AskFi.Runtime.DataModel;
@@ -23,18 +24,26 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
         throw new NotImplementedException();
     }
 
-    public async IAsyncEnumerable<Observation<TPerception>> since<TPerception>(DateTime timestamp)
+    public IEnumerable<Observation<TPerception>> since<TPerception>(DateTime timestamp)
     {
-        var latestPerspectiveSequence = await _ideaStore.Load<PerspectiveSequenceHead>(_latestPerspectiveSequenceCid);
+        PerspectiveSequenceHead latestPerspectiveSequence;
 
-        foreach (var happening in await LatestObservationTreeHeadsSince(latestPerspectiveSequence, timestamp)) {
+        using (NoSynchronizationContextScope.Enter()) {
+            latestPerspectiveSequence = _ideaStore.Load<PerspectiveSequenceHead>(_latestPerspectiveSequenceCid).Result;
+        }
+
+        foreach (var happening in LatestObservationTreeHeadsSince(latestPerspectiveSequence, timestamp)) {
             // Only return observations of requested type TPerception. Ignore all others.
             if (happening.Item.ObservationPerceptionType != typeof(TPerception)) {
                 continue;
             }
 
             // Load latest node in observation sequence.
-            var observationSequenceHead = await _ideaStore.Load<ObservationSequenceHead<TPerception>>(happening.Item.ObservationSequenceHead);
+            ObservationSequenceHead<TPerception> observationSequenceHead;
+
+            using (NoSynchronizationContextScope.Enter()) {
+                observationSequenceHead = _ideaStore.Load<ObservationSequenceHead<TPerception>>(happening.Item.ObservationSequenceHead).Result;
+            }
 
             // If that node is an observation, return its information.
             if (observationSequenceHead is ObservationSequenceHead<TPerception>.Observation observation) {
@@ -43,12 +52,12 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
         }
     }
 
-    public IAsyncEnumerable<(FSharpOption<Observation<TPerception1>>, FSharpOption<Observation<TPerception2>>)> since<TPerception1, TPerception2>(DateTime timestamp)
+    public IEnumerable<(FSharpOption<Observation<TPerception1>>, FSharpOption<Observation<TPerception2>>)> since<TPerception1, TPerception2>(DateTime timestamp)
     {
         throw new NotImplementedException();
     }
 
-    private async ValueTask<IReadOnlyList<PerspectiveSequenceHead.Happening>> LatestObservationTreeHeadsSince(PerspectiveSequenceHead perspectiveSequenceHead, DateTime since)
+    private IReadOnlyList<PerspectiveSequenceHead.Happening> LatestObservationTreeHeadsSince(PerspectiveSequenceHead perspectiveSequenceHead, DateTime since)
     {
         // This is to buffer all observations that happens after 'since' until the first observation is inspected that came before 'since'.
         // This means that before anything is returned, all requested observations are loaded into memory.
@@ -66,7 +75,9 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
                     break;
                 }
 
-                perspectiveSequenceHead = await _ideaStore.Load<PerspectiveSequenceHead>(happening.Item.Previous);
+                using (NoSynchronizationContextScope.Enter()) {
+                    perspectiveSequenceHead = _ideaStore.Load<PerspectiveSequenceHead>(happening.Item.Previous).Result;
+                }
             } else {
                 // No more observations (first node of linked list)
                 Debug.Assert(perspectiveSequenceHead == PerspectiveSequenceHead.Empty, "PerspectiveSequenceHead should have only two union cases: Empty | Happening");
