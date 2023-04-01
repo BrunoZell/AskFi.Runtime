@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using AskFi.Runtime.Observation.Objects;
+using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Queries;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
@@ -14,6 +15,13 @@ namespace AskFi.Runtime.Behavior;
 /// </summary>
 internal class PerspectiveSequencer
 {
+    private readonly IdeaStore _ideaStore;
+
+    public PerspectiveSequencer(IdeaStore ideaStore)
+    {
+        _ideaStore = ideaStore;
+    }
+
     /// <summary>
     /// All <see cref="ObserverSequencer"/> of this session (one per <see cref="Sdk.IObserver{Perception}"/>) write
     /// new observations into this queue, which is then sequentially consumes via <see cref="Sequence"/>.
@@ -32,19 +40,26 @@ internal class PerspectiveSequencer
     public async IAsyncEnumerable<Perspective> Sequence()
     {
         var perspectiveSequence = PerspectiveSequenceHead.Empty;
-        var perspectiveSequenceHash = PerspectiveSequenceStore.Store(perspectiveSequence);
+        var perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
         await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync()) {
             var timestamp = DateTime.UtcNow;
             var newObservationSequenceHead = newObservation.ObservationSequenceHead;
 
-            // Append happening to this worlds event sequence
-            perspectiveSequence = PerspectiveSequenceHead.NewHappening(timestamp, _previous: perspectiveSequenceHash, newObservationSequenceHead);
+            // Persist and implicitly publish ObservationSequenceHead
+            var observationSequenceHeadCid = await _ideaStore.Store<object>(newObservationSequenceHead);
+
+            // Append the updated Observation Sequence as a new happening to the Perspective, as a new sequence head.
+            perspectiveSequence = PerspectiveSequenceHead.NewHappening(new PerspectiveSequenceNode(
+                at: timestamp,
+                previous: perspectiveSequenceCid,
+                observationSequenceHead: observationSequenceHeadCid,
+                observationPerceptionType: newObservation.PerceptionType));
 
             // Persist and implicitly publish to downstream query system (to later query by hash if desired)
-            perspectiveSequenceHash = PerspectiveSequenceStore.Store(perspectiveSequence);
+            perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
-            var perspective = new Perspective(perspectiveSequenceHash.raw, new PerspectiveQueries(perspectiveSequenceHash.raw));
+            var perspective = new Perspective(perspectiveSequenceCid, new PerspectiveQueries(perspectiveSequenceCid, _ideaStore));
             yield return perspective;
         }
     }

@@ -38,8 +38,12 @@ and PerspectiveSequenceNode = {
     /// Links previous PerspectiveSequenceHead. This sequencing creates a temporal order between IObserver-instances.
     Previous: ContentId // PerspectiveSequenceHead
 
+    // Todo: implement as recursion scheme
     /// Link to the updated ObservationSequenceHead<_> that caused this update in perspective.
     /// ObservationSequenceHead<_> of all possible types.
-    /// Todo: implement as recursion scheme
-    ObservationStreamHead: ContentId // ObservationSequenceHead<_>
+    ObservationSequenceHead: ContentId // ObservationSequenceHead<_>
+
+    // Todo: Make a serializable IPLD Link<T> structure to embed type info in the types itself.
+    /// Type 'P of ObservationSequenceHead<'P> linked above.
+    ObservationPerceptionType: Type
 }
