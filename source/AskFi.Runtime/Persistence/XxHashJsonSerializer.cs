@@ -18,6 +18,11 @@ internal class XxHashJsonSerializer : Serializer
             content: bytes);
     }
 
-    public TIdea deserialize<TIdea>(EncodedIdea value) =>
-        throw new NotImplementedException();
+    public TIdea deserialize<TIdea>(EncodedIdea value)
+    {
+        var json = Encoding.UTF8.GetString(value.Content);
+        var idea = JsonConvert.DeserializeObject<TIdea>(json);
+
+        return idea;
+    }
 }
