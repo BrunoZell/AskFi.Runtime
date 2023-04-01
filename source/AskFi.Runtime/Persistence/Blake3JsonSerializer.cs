@@ -1,20 +1,21 @@
 using System.Text;
 using AskFi.Persistence;
+using Blake3;
 using Newtonsoft.Json;
-using Standart.Hash.xxHash;
 
 namespace AskFi.Runtime.Persistence;
 
-internal class XxHashJsonSerializer : Serializer
+internal class Blake3JsonSerializer : Serializer
 {
     public EncodedIdea serialize<TIdea>(TIdea value)
     {
         var json = JsonConvert.SerializeObject(value);
         var bytes = Encoding.UTF8.GetBytes(json);
-        var hash = xxHash128.ComputeHash(bytes, bytes.Length).ToBytes();
+        var hash = Hasher.Hash(bytes);
+        var hashRaw = hash.AsSpanUnsafe().ToArray();
 
         return new EncodedIdea(
-            cid: new ContentId(hash),
+            cid: new ContentId(hashRaw),
             content: bytes);
     }
 

@@ -29,7 +29,7 @@ public class Askbot
     {
         await Task.Yield();
 
-        var ideaStore = new IdeaStore(defaultSerializer: new XxHashJsonSerializer(), _storageEnvironment);
+        var ideaStore = new IdeaStore(defaultSerializer: new Blake3JsonSerializer(), _storageEnvironment);
         var perspectiveSequencer = new PerspectiveSequencer(ideaStore);
         var observerSequencers = _observers
             .Select(o => StartObserverSequencer(o.Key, o.Value, perspectiveSequencer, ideaStore, sessionShutdown))
