@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using AskFi.Runtime.Behavior;
 using AskFi.Runtime.Persistence;
+using Newtonsoft.Json;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime;
@@ -36,8 +37,20 @@ public class Askbot
             .Select(o => StartObserverSequencer(o.Key, o.Value, perspectiveSequencer, ideaStore, _stateTrace, sessionShutdown))
             .ToImmutableList();
 
+        _ = PeriodicallyPersistStateTrace(@"state.json", sessionShutdown);
+
         var sessionController = new SessionController(perspectiveSequencer, _strategy, _brokers);
         await sessionController.Run(sessionShutdown);
+    }
+
+    private async Task PeriodicallyPersistStateTrace(string fileName, CancellationToken cancellationToken)
+    {
+        while (true) {
+            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+
+            var json = JsonConvert.SerializeObject(_stateTrace, Formatting.Indented);
+            File.WriteAllText(fileName, json);
+        }
     }
 
     private static ObserverSequencer StartObserverSequencer(/*'P*/ Type perception, /*IObserver<'P>*/ object observer, PerspectiveSequencer worldSequencer, IdeaStore ideaStore, StateTrace stateTrace, CancellationToken sessionShutdown)
