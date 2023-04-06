@@ -16,10 +16,12 @@ namespace AskFi.Runtime.Behavior;
 internal class PerspectiveSequencer
 {
     private readonly IdeaStore _ideaStore;
+    private readonly StateTrace _stateTrace;
 
-    public PerspectiveSequencer(IdeaStore ideaStore)
+    public PerspectiveSequencer(IdeaStore ideaStore, StateTrace stateTrace)
     {
         _ideaStore = ideaStore;
+        _stateTrace = stateTrace;
     }
 
     /// <summary>
@@ -56,6 +58,8 @@ internal class PerspectiveSequencer
             perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
             yield return new Perspective(perspectiveSequenceCid, new PerspectiveQueries(perspectiveSequenceCid, _ideaStore));
+
+            _stateTrace.LatestPerspectiveSequence = perspectiveSequenceCid;
         }
     }
 }

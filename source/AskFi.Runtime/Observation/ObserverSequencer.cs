@@ -25,10 +25,11 @@ internal class ObserverSequencer : IAsyncDisposable
         Sdk.IObserver<TPerception> observer,
         ChannelWriter<NewSequencedObservation> observationSink,
         IdeaStore ideaStore,
+        StateTrace stateTrace,
         CancellationToken sessionShutdown)
     {
         var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(sessionShutdown);
-        var backgroundTask = PullObservations(observer, observationSink, ideaStore, linkedCancellation.Token);
+        var backgroundTask = PullObservations(observer, observationSink, ideaStore, stateTrace, linkedCancellation.Token);
         return new ObserverSequencer(backgroundTask, linkedCancellation);
     }
 
@@ -41,6 +42,7 @@ internal class ObserverSequencer : IAsyncDisposable
         Sdk.IObserver<TPerception> observer,
         ChannelWriter<NewSequencedObservation> observationSink,
         IdeaStore ideaStore,
+        StateTrace stateTrace,
         CancellationToken cancellationToken)
     {
         await Task.Yield();
@@ -63,6 +65,8 @@ internal class ObserverSequencer : IAsyncDisposable
                     PerceptionType = typeof(TPerception),
                     ObservationSequenceHeadCid = observationSequenceCid
                 });
+
+                stateTrace.LatestObservationSequences[typeof(TPerception)] = observationSequenceCid;
             }
 #if DEBUG
         } catch (Exception ex) {
