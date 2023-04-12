@@ -1,41 +1,90 @@
 using AskFi.Persistence;
+using AskFi.Runtime.Observation.Objects;
 using AskFi.Runtime.Persistence;
+using AskFi.Runtime.Queries;
 using static AskFi.Runtime.DataModel;
+using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Replay;
-public class PerspectiveSynthesis
-{
-    public PerspectiveSynthesis((Type, ContentId)[] observationSequences)
-    {
 
+internal class PerspectiveSynthesis
+{
+    private readonly Type _perception;
+    private readonly ContentId _initialObservationSequenceCid;
+    private readonly IdeaStore _ideaStore;
+
+    // Todo: Allow for merging of multiple Observation Sequences accross different 'Perception.
+
+    public PerspectiveSynthesis(Type perception, ContentId initialObservationSequenceCid, IdeaStore ideaStore)
+    {
+        _perception = perception;
+        _initialObservationSequenceCid = initialObservationSequenceCid;
+        _ideaStore = ideaStore;
     }
+
+    public async IAsyncEnumerable<Perspective> Sequence()
+    {
+        var allObservationsReversed = CreateObservationSequenceReader(_perception, _initialObservationSequenceCid, _ideaStore).ToList();
+
+        var perspectiveSequence = PerspectiveSequenceHead.Empty;
+        var perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
+
+        await foreach (var newObservation in allObservationsReversed.Reverse()) {
+            var timestamp = null as DateTime; // Todo: Read timestamp from Observation
+
+            // Append the updated Observation Sequence as a new happening to the Perspective, as a new sequence head.
+            perspectiveSequence = PerspectiveSequenceHead.NewHappening(new PerspectiveSequenceNode(
+                at: timestamp,
+                previous: perspectiveSequenceCid,
+                observationSequenceHead: newObservation.ObservationSequenceHeadCid,
+                observationPerceptionType: newObservation.PerceptionType));
+
+            // Persist and implicitly publish to downstream query system (to later query by hash if desired)
+            perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
+
+            yield return new Perspective(perspectiveSequenceCid, new PerspectiveQueries(perspectiveSequenceCid, _ideaStore));
+        }
+    }
+
+    private static IAsyncEnumerable<NewSequencedObservation> CreateObservationSequenceReader(Type perception, ContentId initialCid, IdeaStore ideaStore)
+    {
+        var readerType = typeof(ObservationSequenceReader<>).MakeGenericType(perception);
+        var reader = Activator.CreateInstance(readerType, initialCid, ideaStore);
+        return Read((dynamic)reader);
+    }
+
+    private static IAsyncEnumerable<NewSequencedObservation> Read<TPerception>(ObservationSequenceReader<TPerception> reader) =>
+        reader.ReverseSequence();
 
     private class ObservationSequenceReader<TPerception>
     {
-        private readonly ContentId _latestObservationSequenceCid;
+        private readonly ContentId _initialObservationSequenceHeadCid;
         private readonly IdeaStore _ideaStore;
 
-        public ObservationSequenceReader(ContentId latestObservationSequenceCid, IdeaStore ideaStore)
+        public ObservationSequenceReader(ContentId initialObservationSequenceCid, IdeaStore ideaStore)
         {
-            _latestObservationSequenceCid = latestObservationSequenceCid;
+            _initialObservationSequenceHeadCid = initialObservationSequenceCid;
             _ideaStore = ideaStore;
         }
 
-        public async IAsyncEnumerable<ObservationSequenceHead<TPerception>> Read()
+        public async IAsyncEnumerable<NewSequencedObservation> ReverseSequence()
         {
-            var headCid = _latestObservationSequenceCid;
+            var observationSequenceHeadCid = _initialObservationSequenceHeadCid;
 
             while (true) {
-                var head = await _ideaStore.Load<ObservationSequenceHead<TPerception>>(_latestObservationSequenceCid);
+                var head = await _ideaStore.Load<ObservationSequenceHead<TPerception>>(_initialObservationSequenceHeadCid);
 
-                yield return head;
+                yield return new NewSequencedObservation() {
+                    PerceptionType = typeof(TPerception),
+                    ObservationSequenceHeadCid = observationSequenceHeadCid
+                };
 
                 if (head.IsBeginning) {
                     yield break;
                 }
 
                 if (head is ObservationSequenceHead<TPerception>.Observation observation) {
-                    headCid = observation.Item.Previous;
+                    observationSequenceHeadCid = observation.Item.Previous;
                 } else {
                     yield break;
                 }
