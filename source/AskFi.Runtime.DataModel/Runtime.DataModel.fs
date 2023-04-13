@@ -35,8 +35,7 @@ type PerspectiveSequenceHead =
     | Empty
     | Happening of Node:PerspectiveSequenceNode
 and PerspectiveSequenceNode = {
-    /// Absolute timestamp of when this happening occurred.
-    /// As of runtime clock.
+    /// Absolute timestamp of when the linked observation was recorded (first observation in ObservationSequenceHead).
     At: DateTime
 
     /// Links previous PerspectiveSequenceHead. This sequencing creates a temporal order between IObserver-instances.

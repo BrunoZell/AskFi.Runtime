@@ -31,11 +31,9 @@ internal class PerspectiveSynthesis
         var perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
         foreach (var newObservation in allObservations) {
-            var timestamp = null as DateTime; // Todo: Read timestamp from Observation
-
             // Append the updated Observation Sequence as a new happening to the Perspective, as a new sequence head.
             perspectiveSequence = PerspectiveSequenceHead.NewHappening(new PerspectiveSequenceNode(
-                at: timestamp,
+                at: newObservation.ObservationTimestamp,
                 previous: perspectiveSequenceCid,
                 observationSequenceHead: newObservation.ObservationSequenceHeadCid,
                 observationPerceptionType: newObservation.PerceptionType));
@@ -75,20 +73,17 @@ internal class PerspectiveSynthesis
             while (true) {
                 var head = await _ideaStore.Load<ObservationSequenceHead<TPerception>>(_initialObservationSequenceHeadCid);
 
+                if (head is not ObservationSequenceHead<TPerception>.Observation observation) {
+                    yield break;
+                }
+
                 yield return new NewSequencedObservation() {
+                    ObservationTimestamp = observation.Node.At,
                     PerceptionType = typeof(TPerception),
                     ObservationSequenceHeadCid = observationSequenceHeadCid
                 };
 
-                if (head.IsBeginning) {
-                    yield break;
-                }
-
-                if (head is ObservationSequenceHead<TPerception>.Observation observation) {
-                    observationSequenceHeadCid = observation.Node.Previous;
-                } else {
-                    yield break;
-                }
+                observationSequenceHeadCid = observation.Node.Previous;
             }
         }
     }

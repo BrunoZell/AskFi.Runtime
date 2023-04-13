@@ -11,6 +11,12 @@ namespace AskFi.Runtime.Observation.Objects;
 internal class NewSequencedObservation
 {
     /// <summary>
+    /// Absolute timestamp of when this observation was recorded.
+    /// As of runtime clock.
+    /// </summary>
+    public required DateTime ObservationTimestamp { get; init; }
+
+    /// <summary>
     /// The P from IObserver<P> (type of the originating observer instance)
     /// </summary>
     public required Type PerceptionType { get; init; }

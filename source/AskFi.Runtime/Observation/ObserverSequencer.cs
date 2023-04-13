@@ -52,8 +52,10 @@ internal class ObserverSequencer : IAsyncDisposable
             var observationSequenceCid = await ideaStore.Store(observationSequence);
 
             await foreach (var observation in observer.Observations.WithCancellation(cancellationToken)) {
+                var timestamp = DateTime.UtcNow;
+
                 // Build new node onto Observation Sequence
-                var observationSequenceNode = new ObservationSequenceNode<TPerception>(observation, observationSequenceCid);
+                var observationSequenceNode = new ObservationSequenceNode<TPerception>(timestamp, observation, observationSequenceCid);
                 observationSequence = ObservationSequenceHead<TPerception>.NewObservation(observationSequenceNode);
 
                 // Persist new node
@@ -62,6 +64,7 @@ internal class ObserverSequencer : IAsyncDisposable
                 // Todo: Build indices for chronological and continuous sorting
 
                 await observationSink.WriteAsync(new NewSequencedObservation() {
+                    ObservationTimestamp = timestamp,
                     PerceptionType = typeof(TPerception),
                     ObservationSequenceHeadCid = observationSequenceCid
                 });

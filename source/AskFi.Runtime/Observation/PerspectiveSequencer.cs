@@ -45,11 +45,9 @@ internal class PerspectiveSequencer
         var perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
         await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync()) {
-            var timestamp = DateTime.UtcNow;
-
             // Append the updated Observation Sequence as a new happening to the Perspective, as a new sequence head.
             perspectiveSequence = PerspectiveSequenceHead.NewHappening(new PerspectiveSequenceNode(
-                at: timestamp,
+                at: newObservation.ObservationTimestamp,
                 previous: perspectiveSequenceCid,
                 observationSequenceHead: newObservation.ObservationSequenceHeadCid,
                 observationPerceptionType: newObservation.PerceptionType));
