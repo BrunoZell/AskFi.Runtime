@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using AskFi.Runtime.Observation.Objects;
 using AskFi.Runtime.Persistence;
@@ -15,10 +16,54 @@ internal class ObserverSequencer : IAsyncDisposable
     private readonly Task _backgroundTask;
     private readonly CancellationTokenSource _cancellation;
 
+    #region Construction
     private ObserverSequencer(Task backgroundTask, CancellationTokenSource cancellation)
     {
         _backgroundTask = backgroundTask;
         _cancellation = cancellation;
+    }
+
+    public static ObserverSequencer StartNew(
+        /*'P*/ Type perception,
+        /*IObserver<'P>*/ object observer,
+        ChannelWriter<NewSequencedObservation> observationSink,
+        IdeaStore ideaStore,
+        StateTrace stateTrace,
+        CancellationToken sessionShutdown)
+    {
+        var observerProducesPerception = observer.GetType()
+            .GetInterfaces()
+            .Where(i => i.GetGenericTypeDefinition() == typeof(IObserver<>))
+            .Any(o => o.GenericTypeArguments.First() == perception);
+
+        if (!observerProducesPerception) {
+            throw new ArgumentException($"Parameter '{nameof(observer)} must implement 'IObserver<P>' with P = '{nameof(perception)}' (the parameter)");
+        }
+
+        var startNew = typeof(ObserverSequencer).GetMethod(
+            nameof(ObserverSequencer.StartNew),
+            genericParameterCount: 1,
+            new[] {
+                typeof(Sdk.IObserver<>),
+                typeof(ChannelWriter<NewSequencedObservation>),
+                typeof(IdeaStore),
+                typeof(StateTrace),
+                typeof(CancellationToken)
+            });
+
+        Debug.Assert(startNew is not null, $"Function signature of {nameof(ObserverSequencer.StartNew)} has changed and became incompatible with this code.");
+
+        var startNewP = startNew.MakeGenericMethod(perception);
+        var sequencer = startNewP.Invoke(obj: null, new object[] {
+            observer,
+            observationSink,
+            ideaStore,
+            stateTrace,
+            sessionShutdown
+        }) as ObserverSequencer;
+
+        Debug.Assert(sequencer is not null, $"Return type of {nameof(ObserverSequencer.StartNew)} has changed and became incompatible with this code.");
+        return sequencer;
     }
 
     public static ObserverSequencer StartNew<TPerception>(
@@ -32,6 +77,7 @@ internal class ObserverSequencer : IAsyncDisposable
         var backgroundTask = PullObservations(observer, observationSink, ideaStore, stateTrace, linkedCancellation.Token);
         return new ObserverSequencer(backgroundTask, linkedCancellation);
     }
+    #endregion
 
     /// <summary>
     /// This background tasks iterates <see cref="Sdk.IObserver{T}.Observations"/> (once per observer instance)

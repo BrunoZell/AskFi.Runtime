@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Diagnostics;
 using AskFi.Runtime.Behavior;
 using AskFi.Runtime.Persistence;
 using Newtonsoft.Json;
@@ -34,7 +33,7 @@ public class Askbot
         var ideaStore = new IdeaStore(defaultSerializer: new Blake3JsonSerializer(), _storageEnvironment);
         var perspectiveSequencer = new PerspectiveSequencer(ideaStore, _stateTrace);
         var observerSequencers = _observers
-            .Select(o => StartObserverSequencer(o.Key, o.Value, perspectiveSequencer, ideaStore, _stateTrace, sessionShutdown))
+            .Select(o => ObserverSequencer.StartNew(o.Key, o.Value, perspectiveSequencer.ObservationSink, ideaStore, _stateTrace, sessionShutdown))
             .ToImmutableList();
 
         _ = PeriodicallyPersistStateTrace(@"state.json", sessionShutdown);
@@ -51,14 +50,5 @@ public class Askbot
             var json = JsonConvert.SerializeObject(_stateTrace, Formatting.Indented);
             File.WriteAllText(fileName, json);
         }
-    }
-
-    private static ObserverSequencer StartObserverSequencer(/*'P*/ Type perception, /*IObserver<'P>*/ object observer, PerspectiveSequencer worldSequencer, IdeaStore ideaStore, StateTrace stateTrace, CancellationToken sessionShutdown)
-    {
-        var startNew = typeof(ObserverSequencer).GetMethod(nameof(ObserverSequencer.StartNew))!;
-        var startNewP = startNew.MakeGenericMethod(perception);
-        var sequencer = startNewP.Invoke(obj: null, new object[] { observer, worldSequencer.ObservationSink, ideaStore, stateTrace, sessionShutdown }) as ObserverSequencer;
-        Debug.Assert(sequencer is not null, $"Return type of {nameof(ObserverSequencer.StartNew)} changed and now is incompatible with this code.");
-        return sequencer;
     }
 }
