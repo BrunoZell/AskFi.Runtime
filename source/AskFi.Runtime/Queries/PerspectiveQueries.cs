@@ -34,7 +34,7 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
 
         foreach (var happening in LatestObservationTreeHeadsSince(latestPerspectiveSequence, timestamp)) {
             // Only return observations of requested type TPerception. Ignore all others.
-            if (happening.Item.ObservationPerceptionType != typeof(TPerception)) {
+            if (happening.Node.ObservationPerceptionType != typeof(TPerception)) {
                 continue;
             }
 
@@ -42,12 +42,12 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
             ObservationSequenceHead<TPerception> observationSequenceHead;
 
             using (NoSynchronizationContextScope.Enter()) {
-                observationSequenceHead = _ideaStore.Load<ObservationSequenceHead<TPerception>>(happening.Item.ObservationSequenceHead).Result;
+                observationSequenceHead = _ideaStore.Load<ObservationSequenceHead<TPerception>>(happening.Node.ObservationSequenceHead).Result;
             }
 
             // If that node is an observation, return its information.
             if (observationSequenceHead is ObservationSequenceHead<TPerception>.Observation observation) {
-                yield return observation.Item.Observation;
+                yield return observation.Node.Observation;
             }
         }
     }
@@ -67,7 +67,7 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
 
         while (true) {
             if (perspectiveSequenceHead is PerspectiveSequenceHead.Happening happening) {
-                if (happening.Item.At > since) {
+                if (happening.Node.At > since) {
                     selectedObservations.Add(happening);
                 } else {
                     // Found first observation earlier than 'since'.
@@ -76,7 +76,7 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
                 }
 
                 using (NoSynchronizationContextScope.Enter()) {
-                    perspectiveSequenceHead = _ideaStore.Load<PerspectiveSequenceHead>(happening.Item.Previous).Result;
+                    perspectiveSequenceHead = _ideaStore.Load<PerspectiveSequenceHead>(happening.Node.Previous).Result;
                 }
             } else {
                 // No more observations (first node of linked list)

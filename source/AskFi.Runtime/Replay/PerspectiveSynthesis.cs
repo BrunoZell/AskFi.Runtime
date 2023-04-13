@@ -24,12 +24,13 @@ internal class PerspectiveSynthesis
 
     public async IAsyncEnumerable<Perspective> Sequence()
     {
-        var allObservationsReversed = await CreateObservationSequenceReader(_perception, _initialObservationSequenceCid, _ideaStore).ToListAsync();
+        var allObservations = await CreateObservationSequenceReader(_perception, _initialObservationSequenceCid, _ideaStore).ToListAsync();
+        allObservations.Reverse(); // The reader above reads backwards in time. Perspective Sequences must be built forward in time.
 
         var perspectiveSequence = PerspectiveSequenceHead.Empty;
         var perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
-        foreach (var newObservation in allObservationsReversed.Reverse()) {
+        foreach (var newObservation in allObservations) {
             var timestamp = null as DateTime; // Todo: Read timestamp from Observation
 
             // Append the updated Observation Sequence as a new happening to the Perspective, as a new sequence head.
@@ -84,7 +85,7 @@ internal class PerspectiveSynthesis
                 }
 
                 if (head is ObservationSequenceHead<TPerception>.Observation observation) {
-                    observationSequenceHeadCid = observation.Item.Previous;
+                    observationSequenceHeadCid = observation.Node.Previous;
                 } else {
                     yield break;
                 }

@@ -12,8 +12,12 @@ open AskFi.Persistence
 /// All new information received via this IObserver-instance is referenced in this tree.
 type ObservationSequenceHead<'Perception> =
     | Beginning
-    | Observation of ObservationSequenceNode<'Perception>
+    | Observation of Node:ObservationSequenceNode<'Perception>
 and ObservationSequenceNode<'Perception> = {
+    /// Absolute timestamp of when this observation was recorded.
+    /// As of runtime clock.
+    At: DateTime
+
     /// All perceptions that appeared at this instant.
     Observation: Sdk.Observation<'Perception>
 
@@ -29,7 +33,7 @@ and ObservationSequenceNode<'Perception> = {
 /// and merges them into a single sequence of observations (across all Perception-types).
 type PerspectiveSequenceHead =
     | Empty
-    | Happening of PerspectiveSequenceNode
+    | Happening of Node:PerspectiveSequenceNode
 and PerspectiveSequenceNode = {
     /// Absolute timestamp of when this happening occurred.
     /// As of runtime clock.
