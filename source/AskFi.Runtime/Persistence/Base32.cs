@@ -75,7 +75,7 @@ internal static class Base32
         // Also, canonicalize to all upper case
         encoded = encoded.Trim().TrimEnd('=').ToUpper(CultureInfo.InvariantCulture);
         if (encoded.Length == 0)
-            return new byte[0];
+            return Array.Empty<byte>();
 
         var outLength = encoded.Length * Shift / 8;
         var result = new byte[outLength];
