@@ -33,7 +33,7 @@ internal class ObserverSequencer : IAsyncDisposable
     {
         var observerProducesPerception = observer.GetType()
             .GetInterfaces()
-            .Where(i => i.GetGenericTypeDefinition() == typeof(IObserver<>))
+            .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IObserver<>))
             .Any(o => o.GenericTypeArguments.First() == perception);
 
         if (!observerProducesPerception) {
