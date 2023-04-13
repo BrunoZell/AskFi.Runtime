@@ -30,7 +30,10 @@ internal class PerspectiveSynthesis
         var perspectiveSequence = PerspectiveSequenceHead.Empty;
         var perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
-        foreach (var newObservation in allObservations) {
+        var allPerspectives = new List<Perspective>(capacity: allObservations.Count);
+
+        foreach (var newObservation in allObservations)
+        {
             // Append the updated Observation Sequence as a new happening to the Perspective, as a new sequence head.
             perspectiveSequence = PerspectiveSequenceHead.NewHappening(new PerspectiveSequenceNode(
                 at: newObservation.ObservationTimestamp,
@@ -41,7 +44,16 @@ internal class PerspectiveSynthesis
             // Persist and implicitly publish to downstream query system (to later query by hash if desired)
             perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
-            yield return new Perspective(perspectiveSequenceCid, new PerspectiveQueries(perspectiveSequenceCid, _ideaStore));
+            allPerspectives.Add(new Perspective(perspectiveSequenceCid, new PerspectiveQueries(perspectiveSequenceCid, _ideaStore)));
+        }
+
+        // Reverse order of perspective to return from latest (most information) to beginning (least information).
+        // Most analysis just operates on the latest perspective with all available information.
+        allPerspectives.Reverse();
+
+        foreach (var perspective in allPerspectives)
+        {
+            yield return perspective;
         }
     }
 
@@ -70,14 +82,17 @@ internal class PerspectiveSynthesis
         {
             var observationSequenceHeadCid = _initialObservationSequenceHeadCid;
 
-            while (true) {
+            while (true)
+            {
                 var head = await _ideaStore.Load<ObservationSequenceHead<TPerception>>(_initialObservationSequenceHeadCid);
 
-                if (head is not ObservationSequenceHead<TPerception>.Observation observation) {
+                if (head is not ObservationSequenceHead<TPerception>.Observation observation)
+                {
                     yield break;
                 }
 
-                yield return new NewSequencedObservation() {
+                yield return new NewSequencedObservation()
+                {
                     ObservationTimestamp = observation.Node.At,
                     PerceptionType = typeof(TPerception),
                     ObservationSequenceHeadCid = observationSequenceHeadCid
