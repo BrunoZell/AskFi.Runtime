@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading.Channels;
 using AskFi.Runtime.Observation.Objects;
 using AskFi.Runtime.Persistence;
@@ -31,25 +32,17 @@ internal class ObserverSequencer : IAsyncDisposable
         StateTrace stateTrace,
         CancellationToken sessionShutdown)
     {
-        var observerProducesPerception = observer.GetType()
-            .GetInterfaces()
-            .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IObserver<>))
-            .Any(o => o.GenericTypeArguments.First() == perception);
+        var observerType = typeof(Sdk.IObserver<>).MakeGenericType(perception);
+        var implementsObserverType = observer.GetType()
+            .IsAssignableTo(observerType);
 
-        if (!observerProducesPerception) {
+        if (!implementsObserverType) {
             throw new ArgumentException($"Parameter '{nameof(observer)} must implement 'IObserver<P>' with P = '{nameof(perception)}' (the parameter)");
         }
 
         var startNew = typeof(ObserverSequencer).GetMethod(
-            nameof(ObserverSequencer.StartNew),
-            genericParameterCount: 1,
-            new[] {
-                typeof(Sdk.IObserver<>),
-                typeof(ChannelWriter<NewSequencedObservation>),
-                typeof(IdeaStore),
-                typeof(StateTrace),
-                typeof(CancellationToken)
-            });
+            name: nameof(ObserverSequencer.StartNewInternal),
+            bindingAttr: BindingFlags.Static | BindingFlags.NonPublic);
 
         Debug.Assert(startNew is not null, $"Function signature of {nameof(ObserverSequencer.StartNew)} has changed and became incompatible with this code.");
 
@@ -66,7 +59,7 @@ internal class ObserverSequencer : IAsyncDisposable
         return sequencer;
     }
 
-    public static ObserverSequencer StartNew<TPerception>(
+    private static ObserverSequencer StartNewInternal<TPerception>(
         Sdk.IObserver<TPerception> observer,
         ChannelWriter<NewSequencedObservation> observationSink,
         IdeaStore ideaStore,
