@@ -9,13 +9,13 @@ public class Askbot
 {
     private readonly IPerspectiveSource _perspectiveSource;
     private readonly IReadOnlyDictionary<Type, object> _brokers;
-    private readonly Func<StrategyReflection, Perspective, Decision> _strategy;
+    private readonly Func<Reflection, Perspective, Decision> _strategy;
     private readonly IStorageEnvironment _storageEnvironment;
 
     internal Askbot(
         IPerspectiveSource perspectiveSource,
         IReadOnlyDictionary<Type, object> brokers,
-        Func<StrategyReflection, Perspective, Decision> strategy,
+        Func<Reflection, Perspective, Decision> strategy,
         IStorageEnvironment storageEnvironment)
     {
         _perspectiveSource = perspectiveSource;

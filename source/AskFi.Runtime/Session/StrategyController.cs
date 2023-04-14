@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Queries;
 using AskFi.Runtime.Session.Messages;
+using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Session;
