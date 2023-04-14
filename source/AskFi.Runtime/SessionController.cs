@@ -1,20 +1,20 @@
-using AskFi.Runtime.Behavior;
+using AskFi.Runtime.Queries;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime;
 
 internal class SessionController
 {
-    private readonly PerspectiveSequencer _perspectiveSequencer;
+    private readonly IPerspectiveSource _perspectiveSource;
     private readonly Func<StrategyReflection, Perspective, Decision> _strategy;
     private readonly IReadOnlyDictionary<Type, object> _brokers;
 
     public SessionController(
-        PerspectiveSequencer perspectiveSequencer,
+        IPerspectiveSource perspectiveSource,
         Func<StrategyReflection, Perspective, Decision> strategy,
         IReadOnlyDictionary<Type, object> brokers)
     {
-        _perspectiveSequencer = perspectiveSequencer;
+        _perspectiveSource = perspectiveSource;
         _strategy = strategy;
         _brokers = brokers;
     }
@@ -23,7 +23,7 @@ internal class SessionController
     {
         var initiatedActions = new HashSet<ActionId>();
 
-        await foreach (var perspective in _perspectiveSequencer.Sequence().WithCancellation(sessionShutdown)) {
+        await foreach (var perspective in _perspectiveSource.StreamPerspectives().WithCancellation(sessionShutdown)) {
             var reflection = new StrategyReflection(initiatedActions.ToArray());
             var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries
 
