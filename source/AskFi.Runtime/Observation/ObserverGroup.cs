@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 using AskFi.Persistence;
-using AskFi.Runtime.Observation.Objects;
+using AskFi.Runtime.Observation.Messages;
 using AskFi.Runtime.Persistence;
 using static AskFi.Runtime.DataModel;
 
