@@ -1,9 +1,6 @@
-using System.Collections.Immutable;
-using AskFi.Runtime.Behavior;
-using AskFi.Runtime.Observation;
 using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Queries;
-using Newtonsoft.Json;
+using AskFi.Runtime.Session;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime;
@@ -31,7 +28,12 @@ public class Askbot
     {
         await Task.Yield();
 
-        var sessionController = new SessionController(_perspectiveSource, _strategy, _brokers);
-        await sessionController.Run(sessionShutdown);
+        var ideaStore = new IdeaStore(defaultSerializer: new Blake3JsonSerializer(), _storageEnvironment);
+        var strategyController = new StrategyController(_perspectiveSource, _strategy, ideaStore);
+        var actionRouter = new ActionRouter(_brokers, ideaStore);
+
+        await foreach (var action in strategyController.Run(sessionShutdown)) {
+            actionRouter.Execute(action);
+        }
     }
 }
