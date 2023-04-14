@@ -2,7 +2,7 @@ using AskFi.Persistence;
 
 namespace AskFi.Runtime.Persistence;
 
-internal class IdeaStorageCell
+internal sealed class IdeaStorageCell
 {
     private readonly ContentId _contentId;
     private readonly IStorageEnvironment _storageEnvironment;

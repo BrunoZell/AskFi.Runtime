@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace AskFi.Runtime.Persistence;
 
-internal class Blake3JsonSerializer : Serializer
+public class Blake3JsonSerializer : Serializer
 {
     public EncodedIdea serialize<TIdea>(TIdea value)
     {

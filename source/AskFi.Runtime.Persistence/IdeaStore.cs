@@ -3,7 +3,7 @@ using AskFi.Persistence;
 
 namespace AskFi.Runtime.Persistence;
 
-internal class IdeaStore
+public sealed class IdeaStore
 {
     private readonly Serializer _defaultSerializer;
     private readonly IStorageEnvironment _storageEnvironment;
