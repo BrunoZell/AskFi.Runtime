@@ -21,7 +21,7 @@ type CapturedObservation<'Perception> = {
 /// Generated sequentially within an ObserverGroup to add relative time relations.
 type LinkedObservation = {
     Observation: ContentId // CapturedObservation<'Perception>
-    Links: RelativeTimeLink Set // To introduce relative ordering within an ObserverGroup
+    Links: RelativeTimeLink array // To introduce relative ordering within an ObserverGroup
 }
 and RelativeTimeLink = {
     Before: ContentId // Links to a LinkedObservation that happened before the link-owning observation.
