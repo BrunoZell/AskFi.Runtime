@@ -8,25 +8,24 @@ open AskFi.Persistence
 // #### OBSERVATION SUBSYSTEM ####
 // ###############################
 
-/// Raw data structure produced by an IObserver-instance.
-/// All new information received via this IObserver-instance is referenced in this tree.
-type ObservationSequenceHead<'Perception> =
-    | Beginning
-    | Observation of Node:ObservationSequenceNode<'Perception>
-and ObservationSequenceNode<'Perception> = {
+/// Generated immediately after an IObserver emitted a new observation.
+type CapturedObservation<'Perception> = {
     /// Absolute timestamp of when this observation was recorded.
     /// As of runtime clock.
     At: DateTime
 
     /// All perceptions that appeared at this instant.
     Observation: Sdk.Observation<'Perception>
-
-    /// Link to the previous observations of this session, forming a linked list and sequencing them.
-    /// If this is the first observation of this session, this links to the 'Beginning' union case.
-    Previous: ContentId // ObservationSequenceHead<'Perception>
 }
 
-// Todo: Add index trees: ChronologicalObservationSequence, ContinuousObservationSequence, ChronologicalContinuousObservationSequence
+/// Generated sequentially within an ObserverGroup to add relative time relations.
+type LinkedObservation = {
+    Observation: ContentId // CapturedObservation<'Perception>
+    Links: RelativeTimeLink Set // To introduce relative ordering within an ObserverGroup
+}
+and RelativeTimeLink = {
+    Before: ContentId // Links to a LinkedObservation that happened before the link-owning observation.
+}
 
 /// Updates to multiple Observation Sequences are sequenced with each other into a Perspective Sequence.
 /// This defines an ordering between observations from different Observation Sequences (and implicitly, different IObserver-instances)
