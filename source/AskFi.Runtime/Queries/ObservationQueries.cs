@@ -8,14 +8,14 @@ using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Queries;
 
-internal sealed class PerspectiveQueries : IPerspectiveQueries
+internal sealed class ObservationQueries : IPerspectiveQueries
 {
-    private readonly ContentId _latestPerspectiveSequenceCid;
+    private readonly ContentId _perspectiveCid;
     private readonly IdeaStore _ideaStore;
 
-    public PerspectiveQueries(ContentId latestPerspectiveSequenceCid, IdeaStore ideaStore)
+    public ObservationQueries(ContentId perspectiveCid, IdeaStore ideaStore)
     {
-        _latestPerspectiveSequenceCid = latestPerspectiveSequenceCid;
+        _perspectiveCid = perspectiveCid;
         _ideaStore = ideaStore;
     }
 
@@ -29,7 +29,7 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
         PerspectiveSequenceHead latestPerspectiveSequence;
 
         using (NoSynchronizationContextScope.Enter()) {
-            latestPerspectiveSequence = _ideaStore.Load<PerspectiveSequenceHead>(_latestPerspectiveSequenceCid).Result;
+            latestPerspectiveSequence = _ideaStore.Load<PerspectiveSequenceHead>(_perspectiveCid).Result;
         }
 
         foreach (var happening in LatestObservationTreeHeadsSince(latestPerspectiveSequence, timestamp)) {

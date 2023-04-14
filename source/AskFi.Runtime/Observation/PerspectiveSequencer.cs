@@ -55,7 +55,7 @@ internal class PerspectiveSequencer
             // Persist and implicitly publish to downstream query system (to later query by hash if desired)
             perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
-            yield return new Perspective(perspectiveSequenceCid, new PerspectiveQueries(perspectiveSequenceCid, _ideaStore));
+            yield return new Perspective(perspectiveSequenceCid, new ObservationQueries(perspectiveSequenceCid, _ideaStore));
 
             _stateTrace.LatestPerspectiveSequence = perspectiveSequenceCid;
         }

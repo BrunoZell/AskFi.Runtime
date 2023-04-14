@@ -44,7 +44,7 @@ internal class PerspectiveSynthesis
             // Persist and implicitly publish to downstream query system (to later query by hash if desired)
             perspectiveSequenceCid = await _ideaStore.Store(perspectiveSequence);
 
-            allPerspectives.Add(new Perspective(perspectiveSequenceCid, new PerspectiveQueries(perspectiveSequenceCid, _ideaStore)));
+            allPerspectives.Add(new Perspective(perspectiveSequenceCid, new ObservationQueries(perspectiveSequenceCid, _ideaStore)));
         }
 
         // Reverse order of perspective to return from latest (most information) to beginning (least information).
