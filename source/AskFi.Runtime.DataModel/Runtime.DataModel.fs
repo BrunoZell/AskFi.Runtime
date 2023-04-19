@@ -16,30 +16,34 @@ type CapturedObservation<'Perception> = {
     /// As of runtime clock.
     At: DateTime
 
-    /// All perceptions that appeared at this instant.
+    /// All perceptions that appeared at this instant, as emitted by an IObserver<'Perception> instance.
     Observation: Sdk.Observation<'Perception>
 }
 
 /// Generated sequentially within an ObserverGroup to add relative time relations.
 type LinkedObservation = {
     Observation: ContentId // CapturedObservation<'Perception>
-    Links: RelativeTimeLink array // To introduce relative ordering within an ObserverGroup
+
+    /// Introduces relative ordering between CapturedObservations within an ObserverGroup
+    Links: RelativeTimeLink array
 }
 and RelativeTimeLink = {
-    Before: ContentId // Links to a LinkedObservation that happened before the link-owning observation.
+    /// Links to a LinkedObservation that happened before the link-owning observation.
+    Before: ContentId
 }
 
-/// Updates to multiple Observation Sequences are sequenced with each other into a Perspective Sequence.
-/// This defines an ordering between observations from different Observation Sequences (and implicitly, different IObserver-instances)
-/// and merges them into a single sequence of observations (across all Perception-types).
+/// All LinkedObservations produced within a single ObserverGroup are sequenced into a ObservationGroupSequence.
+/// This defines an ordering between observations from different IObserver-instances in addition to the absolute
+/// timestamp which may not be exactl accurate.
 type ObservationGroupSequenceHead =
     | Beginning
     | Happening of Node:ObservationGroupSequenceNode
 and ObservationGroupSequenceNode = {
-    /// Links previous ObservationGroupSequenceHead. This sequencing ensures all observations produced by this observer group are kept as references even if single head updates are dropped.
+    /// Links previous ObservationGroupSequenceHead. This sequencing ensures all observations produced by this
+    /// ObserverGroup are referenced by all later ObservationGroupSequenceHead and thus are retained even if
+    /// some head updates are dropped.
     Previous: ContentId // ObservationGroupSequenceHead
 
-    // Todo: implement as recursion scheme
     /// Cid to the newest LinkedObservation that caused this update in perspective.
     LinkedObservation: ContentId // LinkedObservation
 }
