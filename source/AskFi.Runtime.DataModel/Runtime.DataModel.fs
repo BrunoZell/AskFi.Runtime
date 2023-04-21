@@ -6,9 +6,9 @@ open AskFi.Sdk
 open System
 open System.Runtime.CompilerServices
 
-// ###############################
-// #### OBSERVATION SUBSYSTEM ####
-// ###############################
+// ############################
+// #### OBSERVATION MODULE ####
+// ############################
 
 /// Generated immediately after an IObserver emitted a new observation.
 type CapturedObservation<'Perception> = {
@@ -48,9 +48,9 @@ and ObservationGroupSequenceNode = {
     LinkedObservation: ContentId // LinkedObservation
 }
 
-// ##############################
-// ####  STRATEGY SUBSYSTEM  ####
-// ##############################
+// ###########################
+// ####  STRATEGY MODULE  ####
+// ###########################
 
 type DecisionSequenceHead =
     | Start
