@@ -6,8 +6,8 @@ All persistent or transmitted data in the system is _content addressable_. Which
 
 The _AskFi Runtime_ is seperated into modules that solve distinct problems individually and can be composed together to support a variety of [_Runtime Modes_](#modes).
 
-- [ObserverGroup Module](observer-group-module.md)
-- [Perspective Module] get (LinkedObservation), cid, put (Perspective)
+- [Observer Group Module](modules/observer-group.md)
+- [Perspective Module](modules/perspective.md)
 - [Scene Module] get (Perspective), cid, put (Scene)
 - [Strategy Module]: get (Perspective, Scene), cid, put (Decision), pin
 - [Execution Module]: get (Decision), cid, put (Trace), pin
