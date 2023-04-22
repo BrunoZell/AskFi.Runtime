@@ -66,7 +66,12 @@ Operating _Perspective Module_, _Scene Module_, and _Strategy Module_ to run cus
 
 ### Broker
 
-Action execution by running _Execution Module_.
+Action execution from _Live Strategy_ by running _Execution Module_.
+
+| Type                          | cid | get | put | pin |
+| ----------------------------- | --- | --- | --- | --- |
+| `DecisionSequenceHead`        |     | ✅  |    |     |
+| `DecisionSequenceNode`        |     | ✅  |    |     |
 
 ## Platform
 
