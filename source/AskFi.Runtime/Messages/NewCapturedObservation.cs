@@ -1,6 +1,6 @@
 using AskFi.Persistence;
 
-namespace AskFi.Runtime.Observation.Messages;
+namespace AskFi.Runtime.Messages;
 
 /// <summary>
 /// Event payload for event raised on new observations from an IObserver-instance.

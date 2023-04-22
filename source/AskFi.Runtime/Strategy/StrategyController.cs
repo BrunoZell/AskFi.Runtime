@@ -5,7 +5,7 @@ using AskFi.Runtime.Session.Messages;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
 
-namespace AskFi.Runtime.Session;
+namespace AskFi.Runtime.Strategy;
 
 internal class StrategyController
 {
@@ -33,10 +33,8 @@ internal class StrategyController
             var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries
             var timestamp = DateTime.UtcNow;
 
-            if (decision is not Decision.Initiate initiate) {
-                // Do no more accounting if the decision is to do nothing.
+            if (decision is not Decision.Initiate initiate)                 // Do no more accounting if the decision is to do nothing.
                 continue;
-            }
 
             // Strategy decided to do something.
             // Append this initiative to decision sequence

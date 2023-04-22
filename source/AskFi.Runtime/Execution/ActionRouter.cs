@@ -4,7 +4,7 @@ using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Session.Messages;
 using static AskFi.Sdk;
 
-namespace AskFi.Runtime.Session;
+namespace AskFi.Runtime.Execution;
 
 internal class ActionRouter
 {
