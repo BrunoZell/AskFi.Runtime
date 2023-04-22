@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using AskFi.Runtime.Observation;
 using AskFi.Runtime.Persistence;
 
-namespace AskFi.Runtime;
+namespace AskFi.Runtime.Modes;
 
 public class Scraper
 {

@@ -1,6 +1,6 @@
 using AskFi.Runtime.Persistence;
 
-namespace AskFi.Runtime;
+namespace AskFi.Runtime.Modes;
 
 public class ScraperBuilder
 {
@@ -12,11 +12,9 @@ public class ScraperBuilder
     {
         var added = _observers.TryAdd(typeof(TPerception), observer);
 
-        if (!added) {
-            throw new InvalidOperationException(
+        if (!added)             throw new InvalidOperationException(
                 $"An observer for perception type '{typeof(TPerception).FullName}' has already been added to " +
                 $"this Askbot Builder. Only one observer instance per perception-type can be used.");
-        }
     }
 
     public void WithLocalPersistence(string localPersistenceDirectory)
@@ -31,9 +29,7 @@ public class ScraperBuilder
 
     public Scraper Build()
     {
-        if (_localPersistenceDirectory is null) {
-            throw new InvalidOperationException("A local persistence path must be specified before building an Askbot Instance.");
-        }
+        if (_localPersistenceDirectory is null)             throw new InvalidOperationException("A local persistence path must be specified before building an Askbot Instance.");
 
         _localPersistenceDirectory.Create();
         var storageEnvironment = new StorageEnvironment(_localPersistenceDirectory, _ipfsClusterUrl);

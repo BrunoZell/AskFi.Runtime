@@ -8,12 +8,12 @@ using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Queries;
 
-internal sealed class ObservationQueries : IPerspectiveQueries
+internal sealed class PerspectiveQueries : IPerspectiveQueries
 {
     private readonly ContentId _perspectiveCid;
     private readonly IdeaStore _ideaStore;
 
-    public ObservationQueries(ContentId perspectiveCid, IdeaStore ideaStore)
+    public PerspectiveQueries(ContentId perspectiveCid, IdeaStore ideaStore)
     {
         _perspectiveCid = perspectiveCid;
         _ideaStore = ideaStore;

@@ -2,7 +2,7 @@ using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Queries;
 using StrategyDelegate = System.Func<AskFi.Sdk.Reflection, AskFi.Sdk.Perspective, AskFi.Sdk.Decision>;
 
-namespace AskFi.Runtime;
+namespace AskFi.Runtime.Modes;
 
 public class AskbotBuilder
 {

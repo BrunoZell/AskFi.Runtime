@@ -1,4 +1,4 @@
-# Observer Group Module
+# Observer Module
 
 ## SDK Types
 

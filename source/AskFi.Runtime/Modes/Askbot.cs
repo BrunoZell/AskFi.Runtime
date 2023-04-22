@@ -3,7 +3,7 @@ using AskFi.Runtime.Queries;
 using AskFi.Runtime.Session;
 using static AskFi.Sdk;
 
-namespace AskFi.Runtime;
+namespace AskFi.Runtime.Modes;
 
 public class Askbot
 {
@@ -32,8 +32,6 @@ public class Askbot
         var strategyController = new StrategyController(_perspectiveSource, _strategy, ideaStore);
         var actionRouter = new ActionRouter(_brokers, ideaStore);
 
-        await foreach (var action in strategyController.Run(sessionShutdown)) {
-            actionRouter.Execute(action);
-        }
+        await foreach (var action in strategyController.Run(sessionShutdown))             actionRouter.Execute(action);
     }
 }
