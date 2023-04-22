@@ -8,9 +8,9 @@ The _AskFi Runtime_ is seperated into modules that solve distinct problems indiv
 
 - [Observer Group Module](modules/observer-group.md)
 - [Perspective Module](modules/perspective.md)
-- [Scene Module] 
-- [Strategy Module]: 
-- [Execution Module]: get (Decision), cid, put (Trace), pin
+- [Scene Module]
+- [Strategy Module]
+- [Execution Module]
 
 ## Modes
 
@@ -23,17 +23,31 @@ Operating _Observation Module_ on custom `IObserver`-Instances.
 | `CapturedObservation`         | ✅  |     | ✅ |  ✅  |
 | `LinkedObservation`           | ✅  |     | ✅ |  ✅  |
 | `RelativeTimeLink`            | ✅  |     | ✅ |  ✅  |
-| `ObservationGroupSequenceHead`| ✅  |     | ✅ |  ✅  |
-| `ObservationGroupSequenceNode`| ✅  |     | ✅ |  ✅  |
 
-### Analyze, Visualize
+### Analyze
 
 Operating _Perspective Module_ and _Scene Module_ to then run custom code in the form of `(Perspective, Scene) -> unit`.
 
 | Type                          | cid | get | put | pin |
 | ----------------------------- | --- | --- | --- | --- |
-| `Perspective`                 |     | ✅ | ✅ |      |
-| `Scene`                       |     | ✅ | ✅ |      |
+| `PerspectiveSequenceHead`     |     | ✅  | ✅ |     |
+| `PerspectiveSequenceNode`     |     | ✅  | ✅ |     |
+| `Scene` (todo)                |     | ✅  | ✅ |     |
+
+### Visualize
+
+Operating _Perspective Module_, _Scene Module_ and _Strategy Module_ to produce a _Canvas_ to be visualized in the platforms visualization system.
+
+| Type                          | cid | get | put | pin |
+| ----------------------------- | --- | --- | --- | --- |
+| `CapturedObservation`         |     | ✅  |    |      |
+| `LinkedObservation`           |     | ✅  |    |      |
+| `RelativeTimeLink`            |     | ✅  |    |      |
+| `PerspectiveSequenceHead`     |     | ✅ |     |      |
+| `PerspectiveSequenceNode`     |     | ✅ |     |      |
+| `DecisionSequenceHead`        |     | ✅ |     |      |
+| `DecisionSequenceNode`        |     | ✅ |     |      |
+| `Canvas`                      |     |     | ✅ |  ✅  |
 
 ### Live Strategy
 
@@ -41,8 +55,12 @@ Operating _Perspective Module_, _Scene Module_, and _Strategy Module_ to run cus
 
 | Type                          | cid | get | put | pin |
 | ----------------------------- | --- | --- | --- | --- |
-| `Perspective`                 |     | ✅ |     |      |
-| `Scene`                       |     | ✅ |     |      |
+| `CapturedObservation`         |     | ✅  |    |      |
+| `LinkedObservation`           |     | ✅  |    |      |
+| `RelativeTimeLink`            |     | ✅  |    |      |
+| `PerspectiveSequenceHead`     |     | ✅ |     |      |
+| `PerspectiveSequenceNode`     |     | ✅ |     |      |
+| `Scene` (todo)                |     | ✅ |     |      |
 | `DecisionSequenceHead`        | ✅  |     | ✅ | ✅  |
 | `DecisionSequenceNode`        | ✅  |     | ✅ | ✅  |
 

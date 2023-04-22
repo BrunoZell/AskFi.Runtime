@@ -26,13 +26,6 @@ All LinkedObservations produced within a single ObserverGroup are sequenced into
 This defines an ordering between observations from different IObserver-instances in addition to the absolute
 timestamp which may not be exactl accurate.
 
-### `ObservationGroupSequenceHead`, `ObservationGroupSequenceNode`
-
-Links previous ObservationGroupSequenceHead. This sequencing ensures all observations produced by this
-ObserverGroup are referenced by all later ObservationGroupSequenceHead and thus are retained even if
-some head updates are dropped.
-Cid to the newest LinkedObservation that caused this update in perspective.
-
 ## Component Exeution
 
 An _Observer Group_ is initialized with:
@@ -47,7 +40,3 @@ An _Observer Group_ is initialized with:
 Observations from all Observer-instances are eagery pulled and turned into `CapturedObservation<_>` by attaching the current timestamp as by the Runtime clock.
 
 On each new `CapturedObservation<_>`, a new `LinkedObservation` is created which links all most recent observations of other Observer-instances within the _Observer Group_ via a "$latest was observed before $new". This introduces relative time ordering for all Observations produced within an _Observer Group_. `LinkedObservations` are then peristed and pinned within the platform-wide _Observation Pool_ (which is a pinset of all archived `LinkedObservations` the platform-instance ever created).
-
-## Persistence Interface
-
-cid, put (`LinkedObservation`), pin
