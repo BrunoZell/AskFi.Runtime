@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
-using AskFi.Runtime.Observation;
+using AskFi.Runtime.Modules.Observation;
 using AskFi.Runtime.Persistence;
 
-namespace AskFi.Runtime.Modes;
+namespace AskFi.Runtime.Apps;
 
 public class Scraper
 {

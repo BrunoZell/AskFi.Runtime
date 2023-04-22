@@ -1,9 +1,11 @@
+using AskFi.Runtime.Execution;
+using AskFi.Runtime.Modules.Perspective;
 using AskFi.Runtime.Persistence;
-using AskFi.Runtime.Queries;
 using AskFi.Runtime.Session;
+using AskFi.Runtime.Strategy;
 using static AskFi.Sdk;
 
-namespace AskFi.Runtime.Modes;
+namespace AskFi.Runtime.Apps;
 
 public class Askbot
 {

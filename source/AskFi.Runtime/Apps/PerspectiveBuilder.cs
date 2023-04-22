@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using AskFi.Persistence;
 
-namespace AskFi.Runtime.Modes;
+namespace AskFi.Runtime.Apps;
 
 public class PerspectiveBuilder
 {

@@ -1,6 +1,6 @@
 using AskFi.Runtime.Persistence;
 
-namespace AskFi.Runtime.Modes;
+namespace AskFi.Runtime.Apps;
 
 public class ScraperBuilder
 {

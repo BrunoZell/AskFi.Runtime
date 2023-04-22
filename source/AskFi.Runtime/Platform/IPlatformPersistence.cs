@@ -1,6 +1,6 @@
 using AskFi.Persistence;
 
-namespace AskFi.Runtime.Apps;
+namespace AskFi.Runtime.Platform;
 
 public interface IPlatformPersistence
 {
