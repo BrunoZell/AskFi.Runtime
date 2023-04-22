@@ -75,11 +75,9 @@ Action execution from _Live Strategy_ by running _Execution Module_.
 
 ## Platform
 
-[_Runtime Modes_](#modules) are then executed within a _Platform Infrastructure.
+The AskFi Platform is an additional layer of abstraction that introduces the benefits of the AskFi SDK + Runtime in a managed way, by implementing the necessary infrastructure required to offer it as a hosted service.
 
-First, it provides necessary container scheduling and networking via Kubernetes to run the required workloads in the first place.
-
-Second, it provides infrastructure that [_Runtime Modes_](#modules) can depend on. Those are:
+Internally, the platform executes [_Runtime Modes_](#modules) within the platforms infrastructure:
 
 - Low-latency messaging (Redis)
 - Persistence (IPFS Cluster)

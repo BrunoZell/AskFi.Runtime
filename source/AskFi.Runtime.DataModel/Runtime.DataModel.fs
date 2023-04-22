@@ -36,19 +36,16 @@ and RelativeTimeLink = {
 // ####  PERSPECTIVE MODULE  ####
 // ##############################
 
-/// All LinkedObservations produced within a single ObserverGroup are sequenced into a ObservationGroupSequence.
-/// This defines an ordering between observations from different IObserver-instances in addition to the absolute
-/// timestamp which may not be exactl accurate.
+/// A set of LinkedObservations are then merged into a Perspective Sequence.
+/// This defines a temporal ordering between observations from different IObserver-instances and ObserverGroups.
 type PerspectiveSequenceHead =
     | Beginning
     | Happening of Node:PerspectiveSequenceNode
 and PerspectiveSequenceNode = {
-    /// Links previous PerspectiveSequenceHead. This sequencing ensures all observations produced by this
-    /// ObserverGroup are referenced by all later PerspectiveSequenceHead and thus are retained even if
-    /// some head updates are dropped.
+    /// Links previous PerspectiveSequenceHead to form a temporal order.
     Previous: ContentId // PerspectiveSequenceHead
 
-    /// Cid to the newest LinkedObservation that caused this update in perspective.
+    /// Cid to the then latest LinkedObservation that caused this update in perspective.
     LinkedObservation: ContentId // LinkedObservation
 }
 
