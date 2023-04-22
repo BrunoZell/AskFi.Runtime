@@ -6,7 +6,7 @@ using Microsoft.FSharp.Core;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
 
-namespace AskFi.Runtime.Queries;
+namespace AskFi.Runtime.Modules.Perspective;
 
 internal sealed class PerspectiveQueries : IPerspectiveQueries
 {

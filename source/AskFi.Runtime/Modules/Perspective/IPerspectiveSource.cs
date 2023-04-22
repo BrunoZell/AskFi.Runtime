@@ -1,4 +1,4 @@
-namespace AskFi.Runtime.Queries;
+namespace AskFi.Runtime.Modules.Perspective;
 
 public interface IPerspectiveSource
 {

@@ -4,7 +4,7 @@ using AskFi.Runtime.Messages;
 using AskFi.Runtime.Persistence;
 using static AskFi.Runtime.DataModel;
 
-namespace AskFi.Runtime.Observation;
+namespace AskFi.Runtime.Modules.Observation;
 
 /// <summary>
 /// A single instance to pipe observations from all <see cref="ObserverInstance"/> (<see cref="Sdk.IObserver{Perception}"/>)

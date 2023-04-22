@@ -1,12 +1,11 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Channels;
-using AskFi.Persistence;
 using AskFi.Runtime.Messages;
 using AskFi.Runtime.Persistence;
 using static AskFi.Runtime.DataModel;
 
-namespace AskFi.Runtime.Observation;
+namespace AskFi.Runtime.Modules.Observation;
 
 /// <summary>
 /// Wraps an <see cref="Sdk.IObserver{Perception}"/> and does basic bookkeeping around the incoming
