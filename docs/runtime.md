@@ -12,7 +12,9 @@ The _AskFi Runtime_ is seperated into modules that solve distinct problems indiv
 - [Strategy Module]
 - [Execution Module]
 
-## Modes
+## Platform Apps
+
+The AskFi Platform is an additional layer of abstraction that introduces the benefits of the AskFi SDK + Runtime in a managed way, by implementing the necessary infrastructure required to offer it as a hosted service.
 
 ### Scraper
 
@@ -73,9 +75,7 @@ Action execution from _Live Strategy_ by running _Execution Module_.
 | `DecisionSequenceHead`        |     | ✅  |    |     |
 | `DecisionSequenceNode`        |     | ✅  |    |     |
 
-## Platform
-
-The AskFi Platform is an additional layer of abstraction that introduces the benefits of the AskFi SDK + Runtime in a managed way, by implementing the necessary infrastructure required to offer it as a hosted service.
+## Platform Infrastructure
 
 Internally, the platform executes [_Runtime Modes_](#modules) within the platforms infrastructure:
 
