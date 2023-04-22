@@ -4,9 +4,9 @@ All persistent or transmitted data in the system is _content addressable_. Which
 
 ## Modules
 
-The _AskFi Runtime_ is seperated into modules that solve distinct problems individually and can be composed together to support a variety of [_Runtime Modes_](#modes).
+The _AskFi Runtime_ is seperated into modules that solve distinct problems individually and can be composed together to support a variety of [_Platform Apps_](#platform-apps).
 
-- [Observer Module](modules/observer-group.md)
+- [Observer Module](modules/observer.md)
 - [Perspective Module](modules/perspective.md)
 - [Scene Module]
 - [Strategy Module]
