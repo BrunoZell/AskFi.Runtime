@@ -1,6 +1,5 @@
 using System.Reflection;
 using AskFi.Persistence;
-using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
 using AskFi.Runtime.Session.Messages;
 using static AskFi.Sdk;
@@ -12,7 +11,9 @@ internal class ActionRouter
     private readonly IReadOnlyDictionary<Type, object> _brokers;
     private readonly IPlatformPersistence _persistence;
 
-    public ActionRouter(IReadOnlyDictionary<Type, object> brokers, IPlatformPersistence persistence)
+    public ActionRouter(
+        IReadOnlyDictionary<Type, object> brokers,
+        IPlatformPersistence persistence)
     {
         _brokers = brokers;
         _persistence = persistence;
@@ -38,19 +39,19 @@ internal class ActionRouter
         _ = initiateA.Invoke(obj: null, new object[] { broker, initiation.ActionCid, _persistence }) as Task;
     }
 
-    private static async Task ExecuteAction<TAction>(IBroker<TAction> broker, ContentId actionCid, IdeaStore ideaStore)
+    private static async Task ExecuteAction<TAction>(IBroker<TAction> broker, ContentId actionCid, IPlatformPersistence persistence)
     {
         // Immediately yields back to ensure runtime does not block while action is executed.
         await Task.Yield();
 
         try {
             // Load action instructions into memory
-            var action = await ideaStore.Load<TAction>(actionCid);
+            var action = await persistence.Get<TAction>(actionCid);
 
             // Execute action using user-provided IBroker-instance.
             await broker.Execute(action);
         } catch (Exception ex) {
-            // Todo: Formally catch those exceptions and expose them via the Runtime Data Model.
+            // Todo: Formally catch those exceptions and expose them via the Runtime Data Models Action Trace.
             Console.WriteLine(ex.ToString());
             throw;
         }

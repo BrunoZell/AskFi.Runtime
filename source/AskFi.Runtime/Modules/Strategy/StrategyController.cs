@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using AskFi.Runtime.Platform;
 using AskFi.Runtime.Session.Messages;
 using static AskFi.Runtime.DataModel;
@@ -22,12 +21,12 @@ internal class StrategyController
         _persistence = persistence;
     }
 
-    public async IAsyncEnumerable<NewDecision> Run([EnumeratorCancellation] CancellationToken sessionShutdown)
+    public async Task Run(CancellationToken sessionShutdown)
     {
         var decisionSequence = DecisionSequenceHead.Start;
         var decisionSequenceCid = await _persistence.Put(decisionSequence);
 
-        await foreach (var perspective in _messaging.StreamPerspectives().WithCancellation(sessionShutdown)) {
+        await foreach (var perspective in _messaging.Listen<NewPerspective>(sessionShutdown)) {
             var reflection = new Reflection(decisionSequenceCid, query: null);
             var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries
             var timestamp = DateTime.UtcNow;
@@ -58,10 +57,10 @@ internal class StrategyController
                 });
             }
 
-            yield return new NewDecision() {
+            _messaging.Emit(new NewDecision() {
                 DecisionSequenceCid = decisionSequenceCid,
                 ActionSet = initiations
-            };
+            });
         }
     }
 }
