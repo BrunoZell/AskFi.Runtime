@@ -1,5 +1,3 @@
-using AskFi.Persistence;
-
 namespace AskFi.Runtime.Persistence;
 
 public sealed class StorageEnvironment : IStorageEnvironment
@@ -19,17 +17,16 @@ public sealed class StorageEnvironment : IStorageEnvironment
         var relativePath = BuildFilePath(contentId);
         var absolutePath = Path.Combine(_localStoragePath.FullName, relativePath);
 
-        try
-        {
+        try {
             var content = await File.ReadAllBytesAsync(absolutePath);
-            return new EncodedIdea(contentId, content);
-        }
-        catch (FileNotFoundException)
-        {
+
+            return new EncodedIdea() {
+                Cid = contentId,
+                Content = content
+            };
+        } catch (FileNotFoundException) {
             return null;
-        }
-        catch (DirectoryNotFoundException)
-        {
+        } catch (DirectoryNotFoundException) {
             return null;
         }
     }

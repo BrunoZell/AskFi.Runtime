@@ -33,7 +33,7 @@ internal sealed class IdeaStorageCell
 
         if (disk is not null) {
             // Deserialize, set cache, and return
-            var idea = serializer.deserialize<TIdea>(disk);
+            var idea = serializer.Deserialize<TIdea>(disk);
             _inMemoryIdea.Target = idea;
             return idea;
         }
