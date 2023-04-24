@@ -3,10 +3,9 @@ using AskFi.Persistence;
 namespace AskFi.Runtime.Session.Messages;
 
 /// <summary>
-/// Message from Strategy Subsystem when a non-inaction decision has been made.
-/// This message is to be picked up by the Execution Subsystem, in case live execution is configured.
+/// Message emitted from Strategy Module when a non-inaction decision has been made.
 /// </summary>
-internal class NewActionDecision
+internal class NewDecision
 {
     public required ContentId DecisionSequenceCid { get; init; }
     public required IReadOnlyCollection<ActionInitiation> ActionSet { get; init; }

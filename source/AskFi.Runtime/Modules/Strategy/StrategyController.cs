@@ -23,7 +23,7 @@ internal class StrategyController
         _ideaStore = ideaStore;
     }
 
-    public async IAsyncEnumerable<NewActionDecision> Run([EnumeratorCancellation] CancellationToken sessionShutdown)
+    public async IAsyncEnumerable<NewDecision> Run([EnumeratorCancellation] CancellationToken sessionShutdown)
     {
         var decisionSequence = DecisionSequenceHead.Start;
         var decisionSequenceCid = await _ideaStore.Store(decisionSequence);
@@ -49,17 +49,17 @@ internal class StrategyController
             decisionSequenceCid = await _ideaStore.Store(decisionSequence);
 
             // Persist all action instructions and build message to send to execution system.
-            var initiations = new List<NewActionDecision.ActionInitiation>();
+            var initiations = new List<NewDecision.ActionInitiation>();
             foreach (var initiative in initiate.Initiatives) {
                 var actionCid = await _ideaStore.Store(initiative.Action);
 
-                initiations.Add(new NewActionDecision.ActionInitiation() {
+                initiations.Add(new NewDecision.ActionInitiation() {
                     ActionType = initiative.Type,
                     ActionCid = actionCid
                 });
             }
 
-            yield return new NewActionDecision() {
+            yield return new NewDecision() {
                 DecisionSequenceCid = decisionSequenceCid,
                 ActionSet = initiations
             };

@@ -17,7 +17,7 @@ internal class ActionRouter
         _ideaStore = ideaStore;
     }
 
-    public void Execute(NewActionDecision actionDecision)
+    public void Execute(NewDecision actionDecision)
     {
         // Assign all action initiations an id and send to according broker instance
         foreach (var initiation in actionDecision.ActionSet) {
@@ -25,10 +25,11 @@ internal class ActionRouter
         }
     }
 
-    private void InitiateAction(NewActionDecision.ActionInitiation initiation)
+    private void InitiateAction(NewDecision.ActionInitiation initiation)
     {
-        if (!_brokers.TryGetValue(initiation.ActionType, out var broker))
+        if (!_brokers.TryGetValue(initiation.ActionType, out var broker)) {
             throw new InvalidOperationException("No broker available that can handle this type of action");
+        }
 
         // Uses reflection over dynamic to support brokers that implement multiple IBroker<A> interfaces.
         var initiate = typeof(ActionRouter).GetMethod(nameof(ExecuteAction), BindingFlags.Static | BindingFlags.NonPublic)!;
