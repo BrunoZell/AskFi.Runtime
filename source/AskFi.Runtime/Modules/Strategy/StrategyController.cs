@@ -1,5 +1,6 @@
+using AskFi.Runtime.Messages;
+using AskFi.Runtime.Modules.Perspective;
 using AskFi.Runtime.Platform;
-using AskFi.Runtime.Session.Messages;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
 
@@ -26,7 +27,8 @@ internal class StrategyController
         var decisionSequence = DecisionSequenceHead.Start;
         var decisionSequenceCid = await _persistence.Put(decisionSequence);
 
-        await foreach (var perspective in _messaging.Listen<NewPerspective>(sessionShutdown)) {
+        await foreach (var newPerspective in _messaging.Listen<NewPerspective>(sessionShutdown)) {
+            var perspective = new Sdk.Perspective(newPerspective.PerspectiveSequenceHeadCid, new PerspectiveQueries(newPerspective.PerspectiveSequenceHeadCid, _persistence));
             var reflection = new Reflection(decisionSequenceCid, query: null);
             var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries
             var timestamp = DateTime.UtcNow;

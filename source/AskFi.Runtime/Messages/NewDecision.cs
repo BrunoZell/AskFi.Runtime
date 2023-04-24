@@ -1,6 +1,6 @@
 using AskFi.Persistence;
 
-namespace AskFi.Runtime.Session.Messages;
+namespace AskFi.Runtime.Messages;
 
 /// <summary>
 /// Message emitted from Strategy Module when a non-inaction decision has been made.
