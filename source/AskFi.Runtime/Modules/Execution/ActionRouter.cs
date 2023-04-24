@@ -44,21 +44,35 @@ internal class ActionRouter
         _ = initiateA.Invoke(obj: null, new object[] { broker, initiation.ActionCid, _persistence }) as Task;
     }
 
-    private static async Task ExecuteAction<TAction>(IBroker<TAction> broker, ContentId actionCid, IPlatformPersistence persistence)
+    private static async Task ExecuteAction<TAction>(
+        IBroker<TAction> broker,
+        ContentId actionCid,
+        IPlatformMessaging messaging,
+        IPlatformPersistence persistence)
     {
         // Immediately yields back to ensure runtime does not block while action is executed.
         await Task.Yield();
 
-        try {
-            // Load action instructions into memory
-            var action = await persistence.Get<TAction>(actionCid);
+        // Load action instructions into memory
+        var action = await persistence.Get<TAction>(actionCid);
 
+        try {
             // Execute action using user-provided IBroker-instance.
             await broker.Execute(action);
         } catch (Exception ex) {
-            // Todo: Formally catch those exceptions and expose them via the Runtime Data Models Action Trace.
-            Console.WriteLine(ex.ToString());
-            throw;
+            messaging.Emit<ActionExecuted>(new() {
+                ActionCid = actionCid,
+                ActionType = typeof(TAction),
+                ExecutionTrace = null,
+                UserException = ex.ToString()
+            });
         }
+
+        messaging.Emit<ActionExecuted>(new() {
+            ActionCid = actionCid,
+            ActionType = typeof(TAction),
+            ExecutionTrace = Array.Empty<byte>(),
+            UserException = null
+        });
     }
 }
