@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using AskFi.Runtime.Modules.Observation;
 using AskFi.Runtime.Persistence;
 
@@ -20,14 +19,13 @@ public class Scraper
         await Task.Yield();
 
         var ideaStore = new IdeaStore(defaultSerializer: new Blake3JsonSerializer(), _storageEnvironment);
-        var observerGroup = new ObserverGroup(ideaStore);
-        var observerInstances = _observers
-            .Select(o => ObserverInstance.StartNew(o.Key, o.Value, observerGroup.ObservationSink, ideaStore, sessionShutdown))
-            .ToImmutableList();
+        await using var observerGroup = ObserverGroup.StartNew(_observers, ideaStore, sessionShutdown);
 
-        await foreach (var perspective in observerGroup.Sequence()) {
-            // Todo: Index in etcd
-            // Todo: publish in rabot:new-observation
+        try {
+            // Wait until shutdown got requested through cancellation token.
+            await Task.Delay(0, sessionShutdown);
+        } catch (OperationCanceledException) {
+            // ignore cancellation since it's a graceful shotdown and expected.
         }
     }
 }

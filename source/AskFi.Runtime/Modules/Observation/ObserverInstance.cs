@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Channels;
-using AskFi.Runtime.Messages;
 using AskFi.Runtime.Persistence;
 using static AskFi.Runtime.DataModel;
 
@@ -27,7 +26,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
     public static ObserverInstance StartNew(
         /*'P*/ Type perception,
         /*IObserver<'P>*/ object observer,
-        ChannelWriter<NewCapturedObservation> observationSink,
+        ChannelWriter<NewInternalObservation> observationSink,
         IdeaStore ideaStore,
         CancellationToken sessionShutdown)
     {
@@ -58,7 +57,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
 
     private static ObserverInstance StartNewInternal<TPerception>(
         Sdk.IObserver<TPerception> observer,
-        ChannelWriter<NewCapturedObservation> observationSink,
+        ChannelWriter<NewInternalObservation> observationSink,
         IdeaStore ideaStore,
         CancellationToken sessionShutdown)
     {
@@ -75,7 +74,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
     /// </summary>
     private static async Task PullObservations<TPerception>(
         Sdk.IObserver<TPerception> observer,
-        ChannelWriter<NewCapturedObservation> observationSink,
+        ChannelWriter<NewInternalObservation> observationSink,
         IdeaStore ideaStore,
         CancellationToken cancellationToken)
     {
@@ -106,7 +105,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         _cancellation.Cancel();
-        _cancellation.Dispose();
         await _backgroundTask; // To throw and observe possible exceptions.
+        _cancellation.Dispose();
     }
 }
