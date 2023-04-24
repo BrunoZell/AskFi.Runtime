@@ -4,7 +4,6 @@ open AskFi
 open AskFi.Persistence
 open AskFi.Sdk
 open System
-open System.Runtime.CompilerServices
 
 // ############################
 // #### OBSERVATION MODULE ####
@@ -53,30 +52,40 @@ and PerspectiveSequenceNode = {
 // ####  STRATEGY MODULE  ####
 // ###########################
 
+type ActionSet = {
+    /// All actions the strategy has decided to initiate.
+    /// Those are keyed by 'ActionId'.
+    ActionSet: ActionInitiation array
+}
+
 type DecisionSequenceHead =
     | Start
     | Initiative of DecisionSequenceNode
 and DecisionSequenceNode = {
-    /// All actions the strategy has decided to initiate.
-    /// Those are keyed by 'ActionId'.
-    ActionSet: ActionInitiation array
-
-    /// Link to the updated perception that caused the strategy to execute and produce a decision.
-    PerspectiveSequenceHead: ContentId // PerspectiveSequenceHead<_>
-
-    /// Absolute timestamp (as of runtime clock) of when the decision was made. This is the timestamp _after_ the strategy-code has
-    /// been fully executed. So this is equal to 'this.PerspectiveSequenceHead.At + runtime(strategy(this.PerspectiveSequenceHead))'.
-    At: DateTime
-
     /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
     Previous: ContentId // DecisionSequenceHead
+
+    /// What actions have been decided on.
+    ActionSet: ContentId // ActionSet
+
+    /// Link to the perspective that has been used to execute the strategy and produce this decision.
+    PerspectiveSequenceHead: ContentId // PerspectiveSequenceHead<_>
 }
 
-/// Each action initiation is identified by the content ID of the related Session Sequence Head
-/// plus a zero-based numeric index into ActionSet[i].
-/// This helps to analyze logs and disambiguate actions that are otherwise exactly equal.
-[<IsReadOnly; Struct>]
-type ActionId = {
-    DecisionSequenceHead: ContentId
-    ActionIndex: int32
+// ############################
+// ####  EXECUTION MODULE  ####
+// ############################
+
+type ExecutionSequenceHead =
+    | Start
+    | Execution of ExecutionSequenceNode
+and ExecutionSequenceNode = {
+    /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
+    Previous: ContentId // ExecutionSequenceHead
+    
+    /// What action has been executed.
+    Action: ActionInitiation
+
+    /// Link to the decision sequece head that caused the broker to execute an action.
+    DecisionSequenceHead: ContentId // DecisionSequenceHead
 }
