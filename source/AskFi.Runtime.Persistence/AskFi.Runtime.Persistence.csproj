@@ -11,8 +11,4 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\sdk\source\AskFi.Sdk.fsproj" />
-  </ItemGroup>
-
 </Project>

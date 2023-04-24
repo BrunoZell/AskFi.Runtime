@@ -1,8 +1,8 @@
 module AskFi.Runtime.DataModel
 
 open AskFi
-open AskFi.Persistence
 open AskFi.Sdk
+open AskFi.Runtime.Persistence
 open System
 
 // ############################
@@ -20,7 +20,7 @@ type CapturedObservation<'Perception> = {
 }
 
 /// Generated sequentially within an ObserverGroup to add relative time relations.
-type LinkedObservation = {
+type LinkedObservation<'Perception> = {
     Observation: ContentId // CapturedObservation<'Perception>
 
     /// Introduces relative ordering between CapturedObservations within an ObserverGroup

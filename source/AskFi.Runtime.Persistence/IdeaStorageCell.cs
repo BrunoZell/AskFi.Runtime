@@ -1,5 +1,3 @@
-using AskFi.Persistence;
-
 namespace AskFi.Runtime.Persistence;
 
 internal sealed class IdeaStorageCell
@@ -23,7 +21,7 @@ internal sealed class IdeaStorageCell
         _inMemoryIdea.Target = idea;
     }
 
-    public async ValueTask<TIdea> Load<TIdea>(Serializer serializer)
+    public async ValueTask<TIdea> Load<TIdea>(ISerializer serializer)
     {
         if (_inMemoryIdea.Target is TIdea alive) {
             return alive;
