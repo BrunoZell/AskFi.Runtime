@@ -13,7 +13,7 @@ internal class NewDecision
     internal class ActionInitiation
     {
         /// <summary>
-        /// The P from IObserver<P> (type of the originating observer instance)
+        /// The 'Action from IBroker<'Action> (type of the originating observer instance)
         /// </summary>
         public required Type ActionType { get; init; }
 

@@ -1,7 +1,7 @@
 using System.Reflection;
 using AskFi.Persistence;
+using AskFi.Runtime.Messages;
 using AskFi.Runtime.Platform;
-using AskFi.Runtime.Session.Messages;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Modules.Execution;
@@ -9,21 +9,26 @@ namespace AskFi.Runtime.Modules.Execution;
 internal class ActionRouter
 {
     private readonly IReadOnlyDictionary<Type, object> _brokers;
+    private readonly IPlatformMessaging _messaging;
     private readonly IPlatformPersistence _persistence;
 
     public ActionRouter(
         IReadOnlyDictionary<Type, object> brokers,
+        IPlatformMessaging messaging,
         IPlatformPersistence persistence)
     {
         _brokers = brokers;
+        _messaging = messaging;
         _persistence = persistence;
     }
 
-    public void Execute(NewDecision actionDecision)
+    public async Task Run(CancellationToken cancellationToken)
     {
-        // Assign all action initiations an id and send to according broker instance
-        foreach (var initiation in actionDecision.ActionSet) {
-            InitiateAction(initiation);
+        await foreach (var decision in _messaging.Listen<NewDecision>(cancellationToken)) {
+            // Assign all action initiations an id and send to according broker instance
+            foreach (var initiation in decision.ActionSet) {
+                InitiateAction(initiation);
+            }
         }
     }
 
