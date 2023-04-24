@@ -67,9 +67,6 @@ and DecisionSequenceNode = {
 
     /// What actions have been decided on.
     ActionSet: ContentId // ActionSet
-
-    /// Link to the perspective that has been used to execute the strategy and produce this decision.
-    PerspectiveSequenceHead: ContentId // PerspectiveSequenceHead<_>
 }
 
 // ############################
@@ -92,7 +89,4 @@ and ExecutionSequenceNode = {
 
     /// Trace output from broker.
     Trace: ActionExecutionTrace
-
-    /// Link to the decision sequece head that caused the broker to execute an action.
-    DecisionSequenceHead: ContentId // DecisionSequenceHead
 }
