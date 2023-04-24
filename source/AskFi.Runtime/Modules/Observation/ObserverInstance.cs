@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Channels;
-using AskFi.Runtime.Persistence;
+using AskFi.Runtime.Platform;
 using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Modules.Observation;
@@ -27,7 +27,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
         /*'P*/ Type perception,
         /*IObserver<'P>*/ object observer,
         ChannelWriter<NewInternalObservation> observationSink,
-        IdeaStore ideaStore,
+        IPlatformPersistence persistence,
         CancellationToken sessionShutdown)
     {
         var observerType = typeof(Sdk.IObserver<>).MakeGenericType(perception);
@@ -47,7 +47,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
         var sequencer = startNewP.Invoke(obj: null, new object[] {
             observer,
             observationSink,
-            ideaStore,
+            persistence,
             sessionShutdown
         }) as ObserverInstance;
 
@@ -58,11 +58,11 @@ internal sealed class ObserverInstance : IAsyncDisposable
     private static ObserverInstance StartNewInternal<TPerception>(
         Sdk.IObserver<TPerception> observer,
         ChannelWriter<NewInternalObservation> observationSink,
-        IdeaStore ideaStore,
+        IPlatformPersistence persistence,
         CancellationToken sessionShutdown)
     {
         var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(sessionShutdown);
-        var backgroundTask = PullObservations(observer, observationSink, ideaStore, linkedCancellation.Token);
+        var backgroundTask = PullObservations(observer, observationSink, persistence, linkedCancellation.Token);
         return new ObserverInstance(backgroundTask, linkedCancellation);
     }
     #endregion
@@ -75,7 +75,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
     private static async Task PullObservations<TPerception>(
         Sdk.IObserver<TPerception> observer,
         ChannelWriter<NewInternalObservation> observationSink,
-        IdeaStore ideaStore,
+        IPlatformPersistence persistence,
         CancellationToken cancellationToken)
     {
         await Task.Yield();
@@ -86,11 +86,14 @@ internal sealed class ObserverInstance : IAsyncDisposable
 
                 // Capture timestamp and persist observation
                 var capturedObservation = new CapturedObservation<TPerception>(timestamp, observation);
-                var capturedObservationCid = await ideaStore.Store(capturedObservation);
+
+                // Perf: Generate CID localy and upload in the background
+                var capturedObservationCid = await persistence.Put(capturedObservation);
 
                 await observationSink.WriteAsync(new() {
                     CapturedObservationCid = capturedObservationCid,
-                    ObserverInstance = observer
+                    ObserverInstance = observer,
+                    PerceptionType = typeof(TPerception)
                 });
             }
 #if DEBUG

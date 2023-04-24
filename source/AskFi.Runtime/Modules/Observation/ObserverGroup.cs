@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using AskFi.Persistence;
-using AskFi.Runtime.Persistence;
+using AskFi.Runtime.Messages;
+using AskFi.Runtime.Platform;
 using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Modules.Observation;
@@ -14,27 +15,31 @@ namespace AskFi.Runtime.Modules.Observation;
 internal sealed class ObserverGroup : IAsyncDisposable
 {
     private readonly IReadOnlyCollection<ObserverInstance> _observers;
-    private readonly IdeaStore _ideaStore;
     private readonly Channel<NewInternalObservation> _incomingObservations;
+    private readonly IPlatformMessaging _messaging;
+    private readonly IPlatformPersistence _persistence;
     private readonly CancellationTokenSource _cancellation;
     private readonly Task _backgroundTask;
 
     private ObserverGroup(
         IReadOnlyCollection<ObserverInstance> observers,
-        IdeaStore ideaStore,
         Channel<NewInternalObservation> incomingObservations,
+        IPlatformMessaging messaging,
+        IPlatformPersistence persistence,
         CancellationTokenSource cancellation)
     {
         _observers = observers;
-        _ideaStore = ideaStore;
         _incomingObservations = incomingObservations;
+        _messaging = messaging;
+        _persistence = persistence;
         _cancellation = cancellation;
-        _backgroundTask = Sequence();
+        _backgroundTask = LinkObservations();
     }
 
     public static ObserverGroup StartNew(
         /*IObserver<'Percept> (where Percept = .Key)*/ IReadOnlyDictionary<Type, object> observers,
-        IdeaStore ideaStore,
+        IPlatformMessaging messaging,
+        IPlatformPersistence persistence,
         CancellationToken sessionShutdown)
     {
         var distinctObserverInstances = observers.Values
@@ -48,17 +53,17 @@ internal sealed class ObserverGroup : IAsyncDisposable
         var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(sessionShutdown);
         var incomingObservations = Channel.CreateUnbounded<NewInternalObservation>();
         var observerInstances = observers
-            .Select(o => ObserverInstance.StartNew(o.Key, o.Value, incomingObservations, ideaStore, linkedCancellation.Token))
+            .Select(o => ObserverInstance.StartNew(o.Key, o.Value, incomingObservations, persistence, linkedCancellation.Token))
             .ToArray();
 
-        return new ObserverGroup(observerInstances, ideaStore, incomingObservations, linkedCancellation);
+        return new ObserverGroup(observerInstances, incomingObservations, messaging, persistence, linkedCancellation);
     }
 
     /// <summary>
     /// Long-running background task that reads all pooled new observations and builds <see cref="LinkedObservation"/> for each one.
     /// This introduces a relative ordering in time between observations of the same ObserverGroup.
     /// </summary>
-    private async Task Sequence()
+    private async Task LinkObservations()
     {
         var latestObservations = new Dictionary<object, ContentId>(ReferenceEqualityComparer.Instance);
 
@@ -73,10 +78,13 @@ internal sealed class ObserverGroup : IAsyncDisposable
 
             var linkedObservation = new LinkedObservation(newObservation.CapturedObservationCid, relativeTimeLinks);
 
-            // Persist and implicitly publish to downstream system (to later query by hash if desired)
-            var linkedObservationCid = await _ideaStore.Store(linkedObservation);
+            // Perf: Generate CID localy and upload in the background
+            var linkedObservationCid = await _persistence.Put(linkedObservation);
 
-            _platformMessaging.Emit<NewInternalObservation>(linkedObservationCid);
+            _messaging.Emit<NewObservation>(new() {
+                PerceptionType = newObservation.PerceptionType,
+                LinkedObservationCid = linkedObservationCid
+            });
         }
     }
 

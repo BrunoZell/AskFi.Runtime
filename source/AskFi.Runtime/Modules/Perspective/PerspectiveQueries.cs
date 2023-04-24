@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using AskFi.Persistence;
 using AskFi.Runtime.Internal;
-using AskFi.Runtime.Persistence;
+using AskFi.Runtime.Platform;
 using Microsoft.FSharp.Core;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
@@ -11,12 +11,12 @@ namespace AskFi.Runtime.Modules.Perspective;
 internal sealed class PerspectiveQueries : IPerspectiveQueries
 {
     private readonly ContentId _perspectiveCid;
-    private readonly IdeaStore _ideaStore;
+    private readonly IPlatformPersistence _persistence;
 
-    public PerspectiveQueries(ContentId perspectiveCid, IdeaStore ideaStore)
+    public PerspectiveQueries(ContentId perspectiveCid, IPlatformPersistence persistence)
     {
         _perspectiveCid = perspectiveCid;
-        _ideaStore = ideaStore;
+        _persistence = persistence;
     }
 
     public FSharpOption<Observation<TPerception>> latest<TPerception>()
@@ -29,7 +29,7 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
         PerspectiveSequenceHead latestPerspectiveSequence;
 
         using (NoSynchronizationContextScope.Enter()) {
-            latestPerspectiveSequence = _ideaStore.Load<PerspectiveSequenceHead>(_perspectiveCid).Result;
+            latestPerspectiveSequence = _persistence.Get<PerspectiveSequenceHead>(_perspectiveCid).Result;
         }
 
         foreach (var happening in LatestObservationTreeHeadsSince(latestPerspectiveSequence, timestamp)) {
@@ -42,7 +42,7 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
             ObservationSequenceHead<TPerception> observationSequenceHead;
 
             using (NoSynchronizationContextScope.Enter()) {
-                observationSequenceHead = _ideaStore.Load<ObservationSequenceHead<TPerception>>(happening.Node.ObservationSequenceHead).Result;
+                observationSequenceHead = _persistence.Get<ObservationSequenceHead<TPerception>>(happening.Node.ObservationSequenceHead).Result;
             }
 
             // If that node is an observation, return its information.
@@ -76,7 +76,7 @@ internal sealed class PerspectiveQueries : IPerspectiveQueries
                 }
 
                 using (NoSynchronizationContextScope.Enter()) {
-                    perspectiveSequenceHead = _ideaStore.Load<PerspectiveSequenceHead>(happening.Node.Previous).Result;
+                    perspectiveSequenceHead = _persistence.Get<PerspectiveSequenceHead>(happening.Node.Previous).Result;
                 }
             } else {
                 // No more observations (first node of linked list)

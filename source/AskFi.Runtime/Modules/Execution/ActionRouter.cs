@@ -1,6 +1,7 @@
 using System.Reflection;
 using AskFi.Persistence;
 using AskFi.Runtime.Persistence;
+using AskFi.Runtime.Platform;
 using AskFi.Runtime.Session.Messages;
 using static AskFi.Sdk;
 
@@ -9,12 +10,12 @@ namespace AskFi.Runtime.Modules.Execution;
 internal class ActionRouter
 {
     private readonly IReadOnlyDictionary<Type, object> _brokers;
-    private readonly IdeaStore _ideaStore;
+    private readonly IPlatformPersistence _persistence;
 
-    public ActionRouter(IReadOnlyDictionary<Type, object> brokers, IdeaStore ideaStore)
+    public ActionRouter(IReadOnlyDictionary<Type, object> brokers, IPlatformPersistence persistence)
     {
         _brokers = brokers;
-        _ideaStore = ideaStore;
+        _persistence = persistence;
     }
 
     public void Execute(NewDecision actionDecision)
@@ -34,7 +35,7 @@ internal class ActionRouter
         // Uses reflection over dynamic to support brokers that implement multiple IBroker<A> interfaces.
         var initiate = typeof(ActionRouter).GetMethod(nameof(ExecuteAction), BindingFlags.Static | BindingFlags.NonPublic)!;
         var initiateA = initiate.MakeGenericMethod(initiation.ActionType);
-        _ = initiateA.Invoke(obj: null, new object[] { broker, initiation.ActionCid, _ideaStore }) as Task;
+        _ = initiateA.Invoke(obj: null, new object[] { broker, initiation.ActionCid, _persistence }) as Task;
     }
 
     private static async Task ExecuteAction<TAction>(IBroker<TAction> broker, ContentId actionCid, IdeaStore ideaStore)

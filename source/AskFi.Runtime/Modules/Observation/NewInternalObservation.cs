@@ -19,4 +19,9 @@ internal sealed class NewInternalObservation
     /// Cid to the newly produced CapturedObservation'Perception>
     /// </summary>
     public required ContentId CapturedObservationCid { get; init; }
+
+    /// <summary>
+    /// Type of 'Percept
+    /// </summary>
+    public Type PerceptionType { get; init; }
 }
