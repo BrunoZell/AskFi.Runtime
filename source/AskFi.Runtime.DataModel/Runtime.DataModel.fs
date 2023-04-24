@@ -76,6 +76,10 @@ and DecisionSequenceNode = {
 // ####  EXECUTION MODULE  ####
 // ############################
 
+type ActionExecutionTrace =
+    | Success of trace:byte[]
+    | Error of eexception:string
+
 type ExecutionSequenceHead =
     | Start
     | Execution of ExecutionSequenceNode
@@ -85,6 +89,9 @@ and ExecutionSequenceNode = {
     
     /// What action has been executed.
     Action: ActionInitiation
+
+    /// Trace output from broker.
+    Trace: ActionExecutionTrace
 
     /// Link to the decision sequece head that caused the broker to execute an action.
     DecisionSequenceHead: ContentId // DecisionSequenceHead
