@@ -1,4 +1,4 @@
-using AskFi.Persistence;
+using AskFi.Runtime.Persistence;
 
 namespace AskFi.Runtime.Messages;
 
