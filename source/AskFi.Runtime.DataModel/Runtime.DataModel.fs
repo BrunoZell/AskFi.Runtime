@@ -1,7 +1,6 @@
 module AskFi.Runtime.DataModel
 
 open AskFi
-open AskFi.Sdk
 open AskFi.Runtime.Persistence
 open System
 
@@ -52,6 +51,13 @@ and PerspectiveSequenceNode = {
 // ####  STRATEGY MODULE  ####
 // ###########################
 
+and ActionInitiation = {
+    /// The 'Action from IBroker<'Action> (type of the originating observer instance)
+    ActionType: Type
+    /// Cid to the action information. Has type of ActionType.
+    ActionCid: ContentId
+}
+
 type ActionSet = {
     /// All actions the strategy has decided to initiate.
     /// Those are keyed by 'ActionId'.
@@ -74,8 +80,10 @@ and DecisionSequenceNode = {
 // ############################
 
 type ActionExecutionTrace =
-    | Success of trace:byte[]
-    | Error of eexception:string
+    /// Data emitted by the IBroker action execution. Could include an execution id, transaction, or validity proofs.
+    | Success of trace: byte[] option
+    /// IBroker action execution failed. This holds an exception message, if any, encountered during user code execution.
+    | Error of ``exception``: string option
 
 type ExecutionSequenceHead =
     | Start
