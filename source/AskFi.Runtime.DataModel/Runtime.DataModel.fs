@@ -1,49 +1,108 @@
 module AskFi.Runtime.DataModel
 
 open AskFi
+open AskFi.Runtime.Persistence
 open System
-open AskFi.Persistence
 
-// ###############################
-// #### OBSERVATION SUBSYSTEM ####
-// ###############################
+// ############################
+// #### OBSERVATION MODULE ####
+// ############################
 
-/// Raw data structure produced by an IObserver-instance.
-/// All new information received via this IObserver-instance is referenced in this tree.
-type ObservationSequenceHead<'Perception> =
-    | Beginning
-    | Observation of ObservationSequenceNode<'Perception>
-and ObservationSequenceNode<'Perception> = {
-    /// All perceptions that appeared at this instant.
-    Observation: Sdk.Observation<'Perception>
-
-    /// Link to the previous observations of this session, forming a linked list and sequencing them.
-    /// If this is the first observation of this session, this links to the 'Beginning' union case.
-    Previous: ContentId // ObservationSequenceHead<'Perception>
-}
-
-// Todo: Add index trees: ChronologicalObservationSequence, ContinuousObservationSequence, ChronologicalContinuousObservationSequence
-
-/// Updates to multiple Observation Sequences are sequenced with each other into a Perspective Sequence.
-/// This defines an ordering between observations from different Observation Sequences (and implicitly, different IObserver-instances)
-/// and merges them into a single sequence of observations (across all Perception-types).
-type PerspectiveSequenceHead =
-    | Empty
-    | Happening of PerspectiveSequenceNode
-and PerspectiveSequenceNode = {
-    /// Absolute timestamp of when this happening occurred.
+/// Generated immediately after an IObserver emitted a new observation.
+type CapturedObservation<'Percept> = {
+    /// Absolute timestamp of when this observation was recorded.
     /// As of runtime clock.
     At: DateTime
 
-    /// Links previous PerspectiveSequenceHead. This sequencing creates a temporal order between IObserver-instances.
+    /// All percepts that appeared at this instant, as emitted by an IObserver<'Percept> instance.
+    Observation: Sdk.Observation<'Percept>
+}
+
+/// Generated sequentially within an Observer Module to add relative time relations.
+type LinkedObservation = {
+    Observation: ContentId // CapturedObservation<'Percept>
+
+    /// Introduces relative ordering between CapturedObservations within an Observer Module
+    Links: RelativeTimeLink array
+}
+and RelativeTimeLink = {
+    /// Links to a LinkedObservation that happened before the link-owning observation.
+    Before: ContentId
+}
+
+// ##############################
+// ####  PERSPECTIVE MODULE  ####
+// ##############################
+
+/// A set of LinkedObservations are then merged into a Perspective Sequence.
+/// This defines a temporal ordering between observations from different IObserver-instances and Observer Modules.
+type PerspectiveSequenceHead =
+    | Beginning
+    | Happening of Node:PerspectiveSequenceNode
+and PerspectiveSequenceNode = {
+    /// Links previous PerspectiveSequenceHead to form a temporal order.
     Previous: ContentId // PerspectiveSequenceHead
 
-    // Todo: implement as recursion scheme
-    /// Link to the updated ObservationSequenceHead<_> that caused this update in perspective.
-    /// ObservationSequenceHead<_> of all possible types.
-    ObservationSequenceHead: ContentId // ObservationSequenceHead<_>
+    /// Cid to the then latest LinkedObservation that caused this update in perspective.
+    LinkedObservation: ContentId // LinkedObservation
+}
 
-    // Todo: Make a serializable IPLD Link<T> structure to embed type info in the types itself.
-    /// Type 'P of ObservationSequenceHead<'P> linked above.
-    ObservationPerceptionType: Type
+// ###########################
+// ####  STRATEGY MODULE  ####
+// ###########################
+
+and ActionInitiation = {
+    /// The 'Action from IBroker<'Action> (type of the originating observer instance)
+    ActionType: Type
+    /// Cid to the action information. Has type of ActionType.
+    ActionCid: ContentId
+}
+
+type ActionSet = {
+    /// All actions the strategy has decided to initiate.
+    /// Those are keyed by 'ActionId'.
+    Initiations: ActionInitiation array
+}
+
+type DecisionSequenceHead =
+    | Start
+    | Initiative of Node:DecisionSequenceNode
+and DecisionSequenceNode = {
+    /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
+    Previous: ContentId // DecisionSequenceHead
+
+    /// What actions have been decided on.
+    ActionSet: ContentId // ActionSet
+}
+
+// ############################
+// ####  EXECUTION MODULE  ####
+// ############################
+
+type ActionExecutionTrace =
+    /// Data emitted by the IBroker action execution. Could include an execution id, transaction, or validity proofs.
+    | Success of trace: byte[] option
+    /// IBroker action execution failed. This holds an exception message, if any, encountered during user code execution.
+    | Error of ``exception``: string option
+
+type ActionExecutionResult = {
+    /// Trace output from broker.
+    Trace: ActionExecutionTrace
+    
+    /// When the used IBroker implementation started executing.
+    InitiationTimestamp: DateTime
+
+    /// When the used IBroker implementation completed executing.
+    CompletionTimestamp: DateTime
+}
+
+type ExecutionSequenceHead =
+    | Start
+    | Execution of Node:ExecutionSequenceNode
+and ExecutionSequenceNode = {
+    /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
+    Previous: ContentId // ExecutionSequenceHead
+    
+    /// What action has been executed.
+    Action: ActionInitiation
 }

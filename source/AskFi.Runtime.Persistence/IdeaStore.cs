@@ -1,15 +1,14 @@
 using System.Collections.Concurrent;
-using AskFi.Persistence;
 
 namespace AskFi.Runtime.Persistence;
 
-internal class IdeaStore
+public sealed class IdeaStore
 {
-    private readonly Serializer _defaultSerializer;
+    private readonly ISerializer _defaultSerializer;
     private readonly IStorageEnvironment _storageEnvironment;
     private readonly ConcurrentDictionary<ContentId, IdeaStorageCell> Index = new();
 
-    public IdeaStore(Serializer defaultSerializer, IStorageEnvironment storageEnvironment)
+    public IdeaStore(ISerializer defaultSerializer, IStorageEnvironment storageEnvironment)
     {
         _defaultSerializer = defaultSerializer;
         _storageEnvironment = storageEnvironment;
@@ -35,7 +34,7 @@ internal class IdeaStore
     /// </summary>
     public async ValueTask<ContentId> Store<TIdea>(TIdea idea)
     {
-        var encoded = _defaultSerializer.serialize(idea);
+        var encoded = _defaultSerializer.Serialize(idea);
         var cell = Index[encoded.Cid] = new(encoded.Cid, _storageEnvironment);
 
         cell.SetCache(idea);

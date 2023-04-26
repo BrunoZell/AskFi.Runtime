@@ -1,8 +1,6 @@
-using AskFi.Persistence;
-
 namespace AskFi.Runtime.Persistence;
 
-internal class StorageEnvironment : IStorageEnvironment
+public sealed class StorageEnvironment : IStorageEnvironment
 {
     private readonly DirectoryInfo _localStoragePath;
     private readonly Uri? _ipfsClusterUrl;
@@ -19,17 +17,16 @@ internal class StorageEnvironment : IStorageEnvironment
         var relativePath = BuildFilePath(contentId);
         var absolutePath = Path.Combine(_localStoragePath.FullName, relativePath);
 
-        try
-        {
+        try {
             var content = await File.ReadAllBytesAsync(absolutePath);
-            return new EncodedIdea(contentId, content);
-        }
-        catch (FileNotFoundException)
-        {
+
+            return new EncodedIdea() {
+                Cid = contentId,
+                Content = content
+            };
+        } catch (FileNotFoundException) {
             return null;
-        }
-        catch (DirectoryNotFoundException)
-        {
+        } catch (DirectoryNotFoundException) {
             return null;
         }
     }

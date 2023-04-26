@@ -1,8 +1,6 @@
-using AskFi.Persistence;
-
 namespace AskFi.Runtime.Persistence;
 
-internal class IdeaStorageCell
+internal sealed class IdeaStorageCell
 {
     private readonly ContentId _contentId;
     private readonly IStorageEnvironment _storageEnvironment;
@@ -23,7 +21,7 @@ internal class IdeaStorageCell
         _inMemoryIdea.Target = idea;
     }
 
-    public async ValueTask<TIdea> Load<TIdea>(Serializer serializer)
+    public async ValueTask<TIdea> Load<TIdea>(ISerializer serializer)
     {
         if (_inMemoryIdea.Target is TIdea alive) {
             return alive;
@@ -35,7 +33,7 @@ internal class IdeaStorageCell
 
         if (disk is not null) {
             // Deserialize, set cache, and return
-            var idea = serializer.deserialize<TIdea>(disk);
+            var idea = serializer.Deserialize<TIdea>(disk);
             _inMemoryIdea.Target = idea;
             return idea;
         }
