@@ -33,7 +33,7 @@ internal class StrategyModule
         var decisionSequenceCid = await _persistence.Put(decisionSequence);
 
         await foreach (var newPerspective in _input.ReadAllAsync(sessionShutdown)) {
-            var perspective = new Sdk.Perspective(new PerspectiveQueries(newPerspective.PerspectiveSequenceNodeCid, _persistence));
+            var perspective = new Sdk.Perspective(query: null);
             var reflection = new Reflection(query: null);
             var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries
 

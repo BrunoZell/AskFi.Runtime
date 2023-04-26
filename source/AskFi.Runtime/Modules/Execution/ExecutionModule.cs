@@ -60,7 +60,7 @@ public class ExecutionModule
                     previous: executionSequenceCid,
                     action: initiation));
 
-                executionSequenceCid = await _persistence.Put(decisionSequence);
+                executionSequenceCid = await _persistence.Put(executionSequence);
 
                 await _output.Writer.WriteAsync(new ActionExecuted(executionSequenceCid));
             }

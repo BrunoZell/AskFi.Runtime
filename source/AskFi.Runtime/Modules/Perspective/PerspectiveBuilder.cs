@@ -32,7 +32,7 @@ internal class PerspectiveBuilder
     /// </summary>
     private readonly ImmutableSortedDictionary<DateTime, ContentId> _absouteTimestampMap;
 
-    public async PerspectiveBuilder WithObservation<TPerception>(ContentId linkedObservationCid, IPlatformPersistence persistence)
+    public async ValueTask<PerspectiveBuilder> WithObservation<TPerception>(ContentId linkedObservationCid, IPlatformPersistence persistence)
     {
         var newObservationSet = _allIncludedLinkedObservations.Add(linkedObservationCid);
 
@@ -43,8 +43,6 @@ internal class PerspectiveBuilder
 
         var linkedObservation = await persistence.Get<LinkedObservation>(linkedObservationCid);
         var capturedObservation = await persistence.Get<CapturedObservation<TPerception>>(linkedObservation.Observation);
-
-
 
         var invalidatedPerspectives = _absouteTimestampMap
             .Where(kvp => kvp.Key > capturedObservation.At);
@@ -58,7 +56,6 @@ internal class PerspectiveBuilder
         //    var invalidatedPerspectiveNode = (invalidatedPerspectiveHead as PerspectiveSequenceHead.Happening).Node;
         //    var l = invalidatedPerspectiveNode.LinkedObservation;
         //}
-
 
         if (_absouteTimestampMap.TryGetValue(capturedObservation.At, out var latestPerspectiveSequenceCidOnSameTimestamp)) {
             // There already is an observation on that exact same discrete timestamp.
