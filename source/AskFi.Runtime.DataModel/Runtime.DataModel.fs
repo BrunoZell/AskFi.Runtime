@@ -61,7 +61,7 @@ and ActionInitiation = {
 type ActionSet = {
     /// All actions the strategy has decided to initiate.
     /// Those are keyed by 'ActionId'.
-    ActionSet: ActionInitiation array
+    Initiations: ActionInitiation array
 }
 
 type DecisionSequenceHead =

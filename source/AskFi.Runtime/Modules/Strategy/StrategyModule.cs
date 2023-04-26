@@ -34,9 +34,8 @@ internal class StrategyModule
 
         await foreach (var newPerspective in _input.ReadAllAsync(sessionShutdown)) {
             var perspective = new Sdk.Perspective(new PerspectiveQueries(newPerspective.PerspectiveSequenceNodeCid, _persistence));
-            var reflection = new Reflection(decisionSequenceCid, query: null);
+            var reflection = new Reflection(query: null);
             var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries
-            var timestamp = DateTime.UtcNow;
 
             if (decision is not Decision.Initiate initiate) {
                 // Do no more accounting if the decision is to do nothing.
@@ -44,24 +43,23 @@ internal class StrategyModule
             }
 
             // Strategy decided to do something.
-            // Append this initiative to decision sequence
-            decisionSequence = DecisionSequenceHead.NewInitiative(new DecisionSequenceNode(
-                actionSet: initiate.Initiatives,
-                at: timestamp,
-                previous: decisionSequenceCid));
 
-            decisionSequenceCid = await _persistence.Put(decisionSequence);
-
-            // Persist all action instructions and build message to send to execution system.
-            var initiations = new List<NewDecision.ActionInitiation>();
+            // Build action set
+            var initiations = new List<DataModel.ActionInitiation>();
             foreach (var initiative in initiate.Initiatives) {
                 var actionCid = await _persistence.Put(initiative.Action);
-
-                initiations.Add(new NewDecision.ActionInitiation() {
-                    ActionType = initiative.Type,
-                    ActionCid = actionCid
-                });
+                initiations.Add(new DataModel.ActionInitiation(initiative.Type, actionCid));
             }
+
+            var actionSet = new ActionSet(initiations.ToArray());
+            var actionSetCid = await _persistence.Put(actionSet);
+
+            // Append this action set to the decision sequence
+            decisionSequence = DecisionSequenceHead.NewInitiative(new DecisionSequenceNode(
+                previous: decisionSequenceCid,
+                actionSet: actionSetCid));
+
+            decisionSequenceCid = await _persistence.Put(decisionSequence);
 
             await _output.Writer.WriteAsync(new NewDecision(decisionSequenceCid));
         }

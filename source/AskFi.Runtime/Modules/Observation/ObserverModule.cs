@@ -12,7 +12,7 @@ namespace AskFi.Runtime.Modules.Observation;
 /// are written to the <see cref="ObserverModule"/>, their observation order is set, and all conclusions derived are
 /// deterministic (and thus reproducible) thereafter.
 /// </summary>
-internal sealed class ObserverModule : IObserverModule, IAsyncDisposable
+internal sealed class ObserverModule : IAsyncDisposable
 {
     private readonly IReadOnlyCollection<ObserverInstance> _observers;
     private readonly Channel<NewInternalObservation> _incomingObservations;
