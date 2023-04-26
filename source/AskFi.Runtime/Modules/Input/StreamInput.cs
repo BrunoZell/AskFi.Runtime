@@ -17,6 +17,8 @@ internal class StreamInput<TMessage>
 
     public async Task Run(CancellationToken cancellationToken)
     {
-        await foreach (var input in _messaging.Listen<TMessage>(cancellationToken))             await _input.Writer.WriteAsync(input);
+        await foreach (var input in _messaging.Listen<TMessage>(cancellationToken)) {
+            await _input.Writer.WriteAsync(input);
+        }
     }
 }

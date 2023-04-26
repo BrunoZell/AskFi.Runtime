@@ -25,7 +25,7 @@ internal class PerspectiveMergeModule
         await foreach (var newPerspective in _input.ReadAllAsync(cancellationToken)) {
             // Todo: Merge perspectives
             var newMergedPerspective = new NewPerspective(
-                perspectiveSequenceNodeCid: default,
+                perspectiveSequenceHeadCid: default,
                 rewriteDepth: 0);
 
             await _output.Writer.WriteAsync(newMergedPerspective);

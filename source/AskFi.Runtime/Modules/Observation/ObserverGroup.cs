@@ -98,8 +98,7 @@ internal sealed class ObserverGroup : IAsyncDisposable
 
         // To throw and observe possible exceptions.
         await Task.WhenAll(
-            _observers.Select(o => o.DisposeAsync().AsTask()).Append(_backgroundTask).ToArray()
-        );
+            _observers.Select(o => o.DisposeAsync().AsTask()).Append(_backgroundTask).ToArray());
 
         _cancellation.Dispose();
     }

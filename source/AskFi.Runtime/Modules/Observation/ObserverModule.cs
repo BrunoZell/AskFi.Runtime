@@ -30,15 +30,15 @@ internal sealed class ObserverModule
 
     public async Task Run(CancellationToken cancellationToken)
     {
-        await using (var observerGroupTask = ObserverGroup.StartNew(_observers, _persistence, _output.Writer, cancellationToken)) {
-            try {
-                // Wait until cancelled.
-                await Task.Delay(0, cancellationToken);
-            } catch (OperationCanceledException) {
-                // Cancellation expected.
-            }
+        await using var observerGroupTask = ObserverGroup.StartNew(_observers, _persistence, _output.Writer, cancellationToken);
 
-            //dispose
+        try {
+            // Wait until cancelled.
+            await Task.Delay(0, cancellationToken);
+        } catch (OperationCanceledException) {
+            // Cancellation expected.
         }
+
+        // dispose observer group
     }
 }

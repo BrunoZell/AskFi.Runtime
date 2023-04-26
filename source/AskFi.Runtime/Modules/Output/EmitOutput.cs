@@ -15,6 +15,8 @@ internal class EmitOutput<TMessage>
 
     public async Task Run()
     {
-        await foreach (var output in _output.ReadAllAsync())             _messaging.Emit(output);
+        await foreach (var output in _output.ReadAllAsync()) {
+            _messaging.Emit(output);
+        }
     }
 }
