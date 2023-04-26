@@ -5,25 +5,23 @@ using AskFi.Runtime.Platform;
 namespace AskFi.Runtime.Modules.Perspective;
 internal class PerspectiveModule : IPerspectiveModule
 {
-    private readonly Channel<NewObservation> _input;
+    private readonly ChannelReader<NewObservation> _input;
     private readonly Channel<NewPerspective> _output;
     private readonly IPlatformPersistence _persistence;
 
-    ChannelWriter<NewObservation> IPerspectiveModule.Input => _input.Writer;
-    ChannelReader<NewPerspective> IPerspectiveModule.Output => _output.Reader;
+    public ChannelReader<NewPerspective> Output => _output.Reader;
 
-    public PerspectiveModule(IPlatformPersistence persistence)
+    public PerspectiveModule(IPlatformPersistence persistence, ChannelReader<NewObservation> input)
     {
-        _input = Channel.CreateUnbounded<NewObservation>();
+        _input = input;
         _output = Channel.CreateUnbounded<NewPerspective>();
         _persistence = persistence;
     }
 
     public async Task Run(CancellationToken cancellationToken)
     {
-        await foreach (var newObservation in _input.Reader.ReadAllAsync(cancellationToken)) {
+        await foreach (var newObservation in _input.ReadAllAsync(cancellationToken)) {
             // Todo: Merge perspectives
-            // Todo: Publish state
             var newPerspective = new NewPerspective(
                 perspectiveSequenceNodeCid: default,
                 rewriteDepth: 0);

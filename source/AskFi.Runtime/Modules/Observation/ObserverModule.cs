@@ -21,7 +21,7 @@ internal sealed class ObserverModule : IObserverModule, IAsyncDisposable
     private readonly CancellationTokenSource _cancellation;
     private readonly Task _backgroundTask;
 
-    ChannelReader<NewObservation> IObserverModule.Output => _output.Reader;
+    public ChannelReader<NewObservation> Output => _output.Reader;
 
     private ObserverModule(
         IReadOnlyCollection<ObserverInstance> observers,
@@ -31,7 +31,7 @@ internal sealed class ObserverModule : IObserverModule, IAsyncDisposable
     {
         _observers = observers;
         _incomingObservations = incomingObservations;
-        _output = Channel.CreateBounded<NewObservation>();
+        _output = Channel.CreateUnbounded<NewObservation>();
         _persistence = persistence;
         _cancellation = cancellation;
         _backgroundTask = LinkObservations();
