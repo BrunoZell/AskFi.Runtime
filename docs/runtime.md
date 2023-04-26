@@ -21,78 +21,13 @@ List of runtime modules:
 - [Observer Module](modules/observer.md)
 - [Perspective Module](modules/perspective.md)
 - Perspective Merge Module
-- Scene Module
 - Strategy Module
 - Execution Module
 
-## Platform Apps
+## Modes
 
-The AskFi Platform is an additional layer of abstraction that introduces the benefits of the AskFi SDK + Runtime in a managed way, by implementing the necessary infrastructure required to offer it as a hosted service.
-
-### Scraper
-
-Operating _Observation Module_ on custom `IObserver`-Instances.
-
-| Type                          | cid | get | put | pin |
-| ----------------------------- | --- | --- | --- | --- |
-| `CapturedObservation`         | ✅  |     | ✅ |  ✅  |
-| `LinkedObservation`           | ✅  |     | ✅ |  ✅  |
-| `RelativeTimeLink`            | ✅  |     | ✅ |  ✅  |
-
-### Analyze
-
-Operating _Perspective Module_ and _Scene Module_ to then run custom code in the form of `(Perspective, Scene) -> unit`.
-
-| Type                          | cid | get | put | pin |
-| ----------------------------- | --- | --- | --- | --- |
-| `PerspectiveSequenceHead`     |     | ✅  | ✅ |     |
-| `PerspectiveSequenceNode`     |     | ✅  | ✅ |     |
-| `Scene` (todo)                |     | ✅  | ✅ |     |
-
-### Visualize
-
-Operating _Perspective Module_, _Scene Module_ and _Strategy Module_ to produce a _Canvas_ to be visualized in the platforms visualization system.
-
-| Type                          | cid | get | put | pin |
-| ----------------------------- | --- | --- | --- | --- |
-| `CapturedObservation`         |     | ✅  |    |      |
-| `LinkedObservation`           |     | ✅  |    |      |
-| `RelativeTimeLink`            |     | ✅  |    |      |
-| `PerspectiveSequenceHead`     |     | ✅ |     |      |
-| `PerspectiveSequenceNode`     |     | ✅ |     |      |
-| `DecisionSequenceHead`        |     | ✅ |     |      |
-| `DecisionSequenceNode`        |     | ✅ |     |      |
-| `Canvas`                      |     |     | ✅ |  ✅  |
-
-### Live Strategy
-
-Operating _Perspective Module_, _Scene Module_, and _Strategy Module_ to run custom strategies in the form of `type Decide = Reflection -> Perspective -> Decision`.
-
-| Type                          | cid | get | put | pin |
-| ----------------------------- | --- | --- | --- | --- |
-| `CapturedObservation`         |     | ✅  |    |      |
-| `LinkedObservation`           |     | ✅  |    |      |
-| `RelativeTimeLink`            |     | ✅  |    |      |
-| `PerspectiveSequenceHead`     |     | ✅ |     |      |
-| `PerspectiveSequenceNode`     |     | ✅ |     |      |
-| `Scene` (todo)                |     | ✅ |     |      |
-| `DecisionSequenceHead`        | ✅  |     | ✅ | ✅  |
-| `DecisionSequenceNode`        | ✅  |     | ✅ | ✅  |
-
-### Broker
-
-Action execution from _Live Strategy_ by running _Execution Module_.
-
-| Type                          | cid | get | put | pin |
-| ----------------------------- | --- | --- | --- | --- |
-| `DecisionSequenceHead`        |     | ✅  |    |     |
-| `DecisionSequenceNode`        |     | ✅  |    |     |
-
-## Platform Infrastructure
-
-Internally, the platform executes [_Runtime Modes_](#modules) within the platforms infrastructure:
-
-- Low-latency messaging (Redis)
-- Persistence (IPFS Cluster)
-- State (etcd)
-- Container Scheduling, Networking (Kubernetes), specifically for all _Runtime Modes_ and _Platform Services_.
+- [Scraper](modes/scraper.md)
+- [Sequencer](modes/sequencer.md)
+- [Evaluator](modes/evaluator.md)
+- [Executor](modes/executor.md)
+- [Visualizer](modes/visualizer.md)
