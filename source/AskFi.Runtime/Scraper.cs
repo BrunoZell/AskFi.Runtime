@@ -22,7 +22,7 @@ public class Scraper
         _output = output;
     }
 
-    /// <param name="observers">TValue = <see cref="Sdk.IObserver{Perception}"/> (where Percept = .Key)</param>
+    /// <param name="observers">TValue = <see cref="Sdk.IObserver{Percept}"/> (where Percept = .Key)</param>
     public static Scraper Build(
         IReadOnlyDictionary<Type, object> observers,
         IPlatformPersistence persistence,

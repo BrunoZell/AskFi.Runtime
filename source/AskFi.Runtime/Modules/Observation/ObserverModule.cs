@@ -5,7 +5,7 @@ using AskFi.Runtime.Platform;
 namespace AskFi.Runtime.Modules.Observation;
 
 /// <summary>
-/// A single instance to pipe observations from all <see cref="ObserverInstance"/> (<see cref="Sdk.IObserver{Perception}"/>)
+/// A single instance to pipe observations from all <see cref="ObserverInstance"/> (<see cref="Sdk.IObserver{Percept}"/>)
 /// through in an async way. This is to sequence it in a first-come-first-server way. After new observations
 /// are written to the <see cref="ObserverModule"/>, their observation order is set, and all conclusions derived are
 /// deterministic (and thus reproducible) thereafter.

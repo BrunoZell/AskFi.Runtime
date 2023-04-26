@@ -16,12 +16,12 @@ internal sealed class NewInternalObservation
     public required object ObserverInstance { get; init; } // IObserver<P> instance
 
     /// <summary>
-    /// Cid to the newly produced CapturedObservation'Perception>
+    /// Cid to the newly produced CapturedObservation'Percept>
     /// </summary>
     public required ContentId CapturedObservationCid { get; init; }
 
     /// <summary>
     /// Type of 'Percept
     /// </summary>
-    public required Type PerceptionType { get; init; }
+    public required Type PerceptType { get; init; }
 }

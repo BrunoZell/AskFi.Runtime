@@ -7,7 +7,7 @@ using static AskFi.Runtime.DataModel;
 namespace AskFi.Runtime.Modules.Observation;
 
 /// <summary>
-/// Wraps an <see cref="Sdk.IObserver{Perception}"/> and does basic bookkeeping around the incoming
+/// Wraps an <see cref="Sdk.IObserver{Percept}"/> and does basic bookkeeping around the incoming
 /// observations from that observer. To then forward it to the passed observation sink, which is this
 /// sessions <see cref="ObserverModule"/>.
 /// </summary>
@@ -24,18 +24,18 @@ internal sealed class ObserverInstance : IAsyncDisposable
     }
 
     public static ObserverInstance StartNew(
-        /*'P*/ Type perception,
+        /*'P*/ Type percept,
         /*IObserver<'P>*/ object observer,
         ChannelWriter<NewInternalObservation> observationSink,
         IPlatformPersistence persistence,
         CancellationToken sessionShutdown)
     {
-        var observerType = typeof(Sdk.IObserver<>).MakeGenericType(perception);
+        var observerType = typeof(Sdk.IObserver<>).MakeGenericType(percept);
         var implementsObserverType = observer.GetType()
             .IsAssignableTo(observerType);
 
         if (!implementsObserverType)
-            throw new ArgumentException($"Parameter '{nameof(observer)} must implement 'IObserver<P>' with P = '{nameof(perception)}' (the parameter)");
+            throw new ArgumentException($"Parameter '{nameof(observer)} must implement 'IObserver<P>' with P = '{nameof(percept)}' (the parameter)");
 
         var startNew = typeof(ObserverInstance).GetMethod(
             name: nameof(ObserverInstance.StartNewInternal),
@@ -43,7 +43,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
 
         Debug.Assert(startNew is not null, $"Function signature of {nameof(ObserverInstance.StartNew)} has changed and became incompatible with this code.");
 
-        var startNewP = startNew.MakeGenericMethod(perception);
+        var startNewP = startNew.MakeGenericMethod(percept);
         var sequencer = startNewP.Invoke(obj: null, new object[] {
             observer,
             observationSink,
@@ -55,8 +55,8 @@ internal sealed class ObserverInstance : IAsyncDisposable
         return sequencer;
     }
 
-    private static ObserverInstance StartNewInternal<TPerception>(
-        Sdk.IObserver<TPerception> observer,
+    private static ObserverInstance StartNewInternal<TPercept>(
+        Sdk.IObserver<TPercept> observer,
         ChannelWriter<NewInternalObservation> observationSink,
         IPlatformPersistence persistence,
         CancellationToken sessionShutdown)
@@ -69,11 +69,11 @@ internal sealed class ObserverInstance : IAsyncDisposable
 
     /// <summary>
     /// This background tasks iterates <see cref="Sdk.IObserver{T}.Observations"/> (once per observer instance)
-    /// and sequences it into an <see cref="ObservationSequenceHead{Perception}"/>.
-    /// The new latest <see cref="ObservationSequenceHead{Perception}"/> is then passed to the <see cref="ObserverModule"/> for session-wide sequencing.
+    /// and sequences it into an <see cref="ObservationSequenceHead{Percept}"/>.
+    /// The new latest <see cref="ObservationSequenceHead{Percept}"/> is then passed to the <see cref="ObserverModule"/> for session-wide sequencing.
     /// </summary>
-    private static async Task PullObservations<TPerception>(
-        Sdk.IObserver<TPerception> observer,
+    private static async Task PullObservations<TPercept>(
+        Sdk.IObserver<TPercept> observer,
         ChannelWriter<NewInternalObservation> observationSink,
         IPlatformPersistence persistence,
         CancellationToken cancellationToken)
@@ -85,7 +85,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
                 var timestamp = DateTime.UtcNow;
 
                 // Capture timestamp and persist observation
-                var capturedObservation = new CapturedObservation<TPerception>(timestamp, observation);
+                var capturedObservation = new CapturedObservation<TPercept>(timestamp, observation);
 
                 // Perf: Generate CID localy and upload in the background
                 var capturedObservationCid = await persistence.Put(capturedObservation);
@@ -93,7 +93,7 @@ internal sealed class ObserverInstance : IAsyncDisposable
                 await observationSink.WriteAsync(new() {
                     CapturedObservationCid = capturedObservationCid,
                     ObserverInstance = observer,
-                    PerceptionType = typeof(TPerception)
+                    PerceptType = typeof(TPercept)
                 });
             }
 #if DEBUG

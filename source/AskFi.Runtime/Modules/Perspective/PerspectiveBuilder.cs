@@ -32,7 +32,7 @@ internal class PerspectiveBuilder
     /// </summary>
     private readonly ImmutableSortedDictionary<DateTime, ContentId> _absouteTimestampMap;
 
-    public async ValueTask<PerspectiveBuilder> WithObservation<TPerception>(ContentId linkedObservationCid, IPlatformPersistence persistence)
+    public async ValueTask<PerspectiveBuilder> WithObservation<TPercept>(ContentId linkedObservationCid, IPlatformPersistence persistence)
     {
         var newObservationSet = _allIncludedLinkedObservations.Add(linkedObservationCid);
 
@@ -42,7 +42,7 @@ internal class PerspectiveBuilder
         }
 
         var linkedObservation = await persistence.Get<LinkedObservation>(linkedObservationCid);
-        var capturedObservation = await persistence.Get<CapturedObservation<TPerception>>(linkedObservation.Observation);
+        var capturedObservation = await persistence.Get<CapturedObservation<TPercept>>(linkedObservation.Observation);
 
         var invalidatedPerspectives = _absouteTimestampMap
             .Where(kvp => kvp.Key > capturedObservation.At);

@@ -9,18 +9,18 @@ open System
 // ############################
 
 /// Generated immediately after an IObserver emitted a new observation.
-type CapturedObservation<'Perception> = {
+type CapturedObservation<'Percept> = {
     /// Absolute timestamp of when this observation was recorded.
     /// As of runtime clock.
     At: DateTime
 
-    /// All perceptions that appeared at this instant, as emitted by an IObserver<'Perception> instance.
-    Observation: Sdk.Observation<'Perception>
+    /// All percepts that appeared at this instant, as emitted by an IObserver<'Percept> instance.
+    Observation: Sdk.Observation<'Percept>
 }
 
 /// Generated sequentially within an Observer Module to add relative time relations.
 type LinkedObservation = {
-    Observation: ContentId // CapturedObservation<'Perception>
+    Observation: ContentId // CapturedObservation<'Percept>
 
     /// Introduces relative ordering between CapturedObservations within an Observer Module
     Links: RelativeTimeLink array
