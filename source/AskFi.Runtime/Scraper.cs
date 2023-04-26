@@ -29,10 +29,10 @@ public class Scraper
         IPlatformMessaging messaging)
     {
         var observation = ObserverModule.StartNew(observers, persistence, sessionShutdown: default);
-        var perspective = new PerspectiveModule(persistence, observation.Output);
-        var output = new EmitOutput<NewPerspective>(messaging, perspective.Output);
+        var perspectiveModule = new PerspectiveModule(persistence, observation.Output);
+        var output = new EmitOutput<NewPerspective>(messaging, perspectiveModule.Output);
 
-        return new(observation, perspective, output);
+        return new(observation, perspectiveModule, output);
     }
 
     public async Task Run(CancellationToken shutdown)

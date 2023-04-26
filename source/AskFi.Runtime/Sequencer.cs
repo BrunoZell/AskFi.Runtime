@@ -9,16 +9,16 @@ namespace AskFi.Runtime;
 public class Sequencer
 {
     private readonly StreamInput<NewPerspective> _input;
-    private readonly PerspectiveMergeModule _perspectiveModule;
+    private readonly PerspectiveMergeModule _perspectiveMergeModule;
     private readonly EmitOutput<NewPerspective> _output;
 
     private Sequencer(
         StreamInput<NewPerspective> input,
-        PerspectiveMergeModule perspectiveModule,
+        PerspectiveMergeModule perspectiveMergeModule,
         EmitOutput<NewPerspective> output)
     {
         _input = input;
-        _perspectiveModule = perspectiveModule;
+        _perspectiveMergeModule = perspectiveMergeModule;
         _output = output;
     }
 
@@ -27,16 +27,16 @@ public class Sequencer
         IPlatformMessaging messaging)
     {
         var input = new StreamInput<NewPerspective>(messaging);
-        var perspective = new PerspectiveMergeModule(persistence, input.Output);
-        var output = new EmitOutput<NewPerspective>(messaging, perspective.Output);
+        var perspectiveMergeModule = new PerspectiveMergeModule(persistence, input.Output);
+        var output = new EmitOutput<NewPerspective>(messaging, perspectiveMergeModule.Output);
 
-        return new(input, perspective, output);
+        return new(input, perspectiveMergeModule, output);
     }
 
     public async Task Run(CancellationToken shutdown)
     {
         var inputTask = _input.Run(shutdown);
-        var perspectiveTask = _perspectiveModule.Run(shutdown);
+        var perspectiveTask = _perspectiveMergeModule.Run(shutdown);
         var outputTask = _output.Run();
 
         await Task.WhenAll(inputTask, perspectiveTask, outputTask);
