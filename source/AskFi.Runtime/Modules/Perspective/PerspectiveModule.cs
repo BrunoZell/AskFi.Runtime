@@ -3,7 +3,7 @@ using AskFi.Runtime.Messages;
 using AskFi.Runtime.Platform;
 
 namespace AskFi.Runtime.Modules.Perspective;
-internal class PerspectiveModule : IPerspectiveModule
+internal class PerspectiveModule
 {
     private readonly ChannelReader<NewObservation> _input;
     private readonly Channel<NewPerspective> _output;
@@ -11,7 +11,9 @@ internal class PerspectiveModule : IPerspectiveModule
 
     public ChannelReader<NewPerspective> Output => _output.Reader;
 
-    public PerspectiveModule(IPlatformPersistence persistence, ChannelReader<NewObservation> input)
+    public PerspectiveModule(
+        IPlatformPersistence persistence,
+        ChannelReader<NewObservation> input)
     {
         _input = input;
         _output = Channel.CreateUnbounded<NewPerspective>();

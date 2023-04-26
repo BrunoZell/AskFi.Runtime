@@ -21,8 +21,9 @@ public class Scraper
         _output = output;
     }
 
+    /// <param name="observers">TValue = <see cref="Sdk.IObserver{Perception}"/> (where Percept = .Key)</param>
     public static Scraper Build(
-        /*IObserver<'Percept> (where Percept = .Key)*/ IReadOnlyDictionary<Type, object> observers,
+        IReadOnlyDictionary<Type, object> observers,
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
