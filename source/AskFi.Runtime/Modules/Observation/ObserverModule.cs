@@ -9,36 +9,36 @@ namespace AskFi.Runtime.Modules.Observation;
 /// <summary>
 /// A single instance to pipe observations from all <see cref="ObserverInstance"/> (<see cref="Sdk.IObserver{Perception}"/>)
 /// through in an async way. This is to sequence it in a first-come-first-server way. After new observations
-/// are written to the <see cref="ObserverGroup"/>, their observation order is set, and all conclusions derived are
+/// are written to the <see cref="ObserverModule"/>, their observation order is set, and all conclusions derived are
 /// deterministic (and thus reproducible) thereafter.
 /// </summary>
-internal sealed class ObserverGroup : IAsyncDisposable
+internal sealed class ObserverModule : IObserverModule, IAsyncDisposable
 {
     private readonly IReadOnlyCollection<ObserverInstance> _observers;
     private readonly Channel<NewInternalObservation> _incomingObservations;
-    private readonly IPlatformMessaging _messaging;
+    private readonly Channel<NewObservation> _output;
     private readonly IPlatformPersistence _persistence;
     private readonly CancellationTokenSource _cancellation;
     private readonly Task _backgroundTask;
 
-    private ObserverGroup(
+    ChannelReader<NewObservation> IObserverModule.Output => _output.Reader;
+
+    private ObserverModule(
         IReadOnlyCollection<ObserverInstance> observers,
         Channel<NewInternalObservation> incomingObservations,
-        IPlatformMessaging messaging,
         IPlatformPersistence persistence,
         CancellationTokenSource cancellation)
     {
         _observers = observers;
         _incomingObservations = incomingObservations;
-        _messaging = messaging;
+        _output = Channel.CreateBounded<NewObservation>();
         _persistence = persistence;
         _cancellation = cancellation;
         _backgroundTask = LinkObservations();
     }
 
-    public static ObserverGroup StartNew(
+    public static ObserverModule StartNew(
         /*IObserver<'Percept> (where Percept = .Key)*/ IReadOnlyDictionary<Type, object> observers,
-        IPlatformMessaging messaging,
         IPlatformPersistence persistence,
         CancellationToken sessionShutdown)
     {
@@ -56,7 +56,7 @@ internal sealed class ObserverGroup : IAsyncDisposable
             .Select(o => ObserverInstance.StartNew(o.Key, o.Value, incomingObservations, persistence, linkedCancellation.Token))
             .ToArray();
 
-        return new ObserverGroup(observerInstances, incomingObservations, messaging, persistence, linkedCancellation);
+        return new ObserverModule(observerInstances, incomingObservations, persistence, linkedCancellation);
     }
 
     /// <summary>
@@ -81,10 +81,9 @@ internal sealed class ObserverGroup : IAsyncDisposable
             // Perf: Generate CID localy and upload in the background
             var linkedObservationCid = await _persistence.Put(linkedObservation);
 
-            _messaging.Emit<NewObservation>(new() {
-                PerceptionType = newObservation.PerceptionType,
-                LinkedObservationCid = linkedObservationCid
-            });
+            await _output.Writer.WriteAsync(new NewObservation(
+                newObservation.PerceptionType,
+                linkedObservationCid));
         }
     }
 

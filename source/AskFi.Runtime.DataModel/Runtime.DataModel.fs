@@ -18,11 +18,11 @@ type CapturedObservation<'Perception> = {
     Observation: Sdk.Observation<'Perception>
 }
 
-/// Generated sequentially within an ObserverGroup to add relative time relations.
-type LinkedObservation<'Perception> = {
+/// Generated sequentially within an Observer Module to add relative time relations.
+type LinkedObservation = {
     Observation: ContentId // CapturedObservation<'Perception>
 
-    /// Introduces relative ordering between CapturedObservations within an ObserverGroup
+    /// Introduces relative ordering between CapturedObservations within an Observer Module
     Links: RelativeTimeLink array
 }
 and RelativeTimeLink = {
@@ -35,7 +35,7 @@ and RelativeTimeLink = {
 // ##############################
 
 /// A set of LinkedObservations are then merged into a Perspective Sequence.
-/// This defines a temporal ordering between observations from different IObserver-instances and ObserverGroups.
+/// This defines a temporal ordering between observations from different IObserver-instances and Observer Modules.
 type PerspectiveSequenceHead =
     | Beginning
     | Happening of Node:PerspectiveSequenceNode
