@@ -66,7 +66,7 @@ type ActionSet = {
 
 type DecisionSequenceHead =
     | Start
-    | Initiative of DecisionSequenceNode
+    | Initiative of Node:DecisionSequenceNode
 and DecisionSequenceNode = {
     /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
     Previous: ContentId // DecisionSequenceHead
@@ -85,16 +85,24 @@ type ActionExecutionTrace =
     /// IBroker action execution failed. This holds an exception message, if any, encountered during user code execution.
     | Error of ``exception``: string option
 
+type ActionExecutionResult = {
+    /// Trace output from broker.
+    Trace: ActionExecutionTrace
+    
+    /// When the used IBroker implementation started executing.
+    InitiationTimestamp: DateTime
+
+    /// When the used IBroker implementation completed executing.
+    CompletionTimestamp: DateTime
+}
+
 type ExecutionSequenceHead =
     | Start
-    | Execution of ExecutionSequenceNode
+    | Execution of Node:ExecutionSequenceNode
 and ExecutionSequenceNode = {
     /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
     Previous: ContentId // ExecutionSequenceHead
     
     /// What action has been executed.
     Action: ActionInitiation
-
-    /// Trace output from broker.
-    Trace: ActionExecutionTrace
 }

@@ -14,8 +14,8 @@ type NewObservation = {
 
 /// Represents a new perspective
 type NewPerspective = {
-    /// Cid to the newly created perspective sequence node (DataModel.PerspectiveSequenceNode)
-    PerspectiveSequenceNodeCid: ContentId
+    /// Cid to the newly created perspective sequence head (DataModel.PerspectiveSequenceHead)
+    PerspectiveSequenceHeadCid: ContentId
 
     /// How many nodes before the one specified above have been
     /// rewritten compared to the previously emitted new perspective
@@ -27,12 +27,12 @@ type NewPerspective = {
 
 /// Message emitted from Strategy Module when a non-inaction decision has been made
 type NewDecision = {
-    /// Cid to the newly created decision sequence node (DataModel.DecisionSequenceNode)
-    DecisionSequenceNodeCid: ContentId
+    /// Cid to the newly created decision sequence head (DataModel.DecisionSequenceHead)
+    DecisionSequenceHeadCid: ContentId
 }
 
 /// Represents the result of an action execution
 type ActionExecuted = {
-    /// Cid to the newly created execution sequence node (DataModel.ExecutionSequenceNode)
-    ExecutionSequenceNodeCid: ContentId
+    /// Cid to the newly created execution sequence head (DataModel.ExecutionSequenceHead)
+    ExecutionSequenceHeadCid: ContentId
 }
