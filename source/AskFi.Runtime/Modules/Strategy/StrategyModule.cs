@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using AskFi.Runtime.Messages;
 using AskFi.Runtime.Modules.Perspective;
 using AskFi.Runtime.Platform;
@@ -6,19 +7,23 @@ using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Modules.Strategy;
 
-internal class StrategyController
+internal class StrategyModule : IStrategyModule
 {
     private readonly Func<Reflection, Sdk.Perspective, Decision> _strategy;
-    private readonly IPlatformMessaging _messaging;
+    private readonly Channel<NewPerspective> _input;
+    private readonly Channel<NewDecision> _output;
     private readonly IPlatformPersistence _persistence;
 
-    public StrategyController(
+    ChannelWriter<NewPerspective> IStrategyModule.Input { get; }
+    ChannelReader<NewDecision> IStrategyModule.Output { get; }
+
+    public StrategyModule(
         Func<Reflection, Sdk.Perspective, Decision> strategy,
-        IPlatformMessaging messaging,
         IPlatformPersistence persistence)
     {
         _strategy = strategy;
-        _messaging = messaging;
+        _input = Channel.CreateUnbounded<NewPerspective>();
+        _output = Channel.CreateUnbounded<NewDecision>();
         _persistence = persistence;
     }
 
@@ -27,8 +32,8 @@ internal class StrategyController
         var decisionSequence = DecisionSequenceHead.Start;
         var decisionSequenceCid = await _persistence.Put(decisionSequence);
 
-        await foreach (var newPerspective in _messaging.Listen<NewPerspective>(sessionShutdown)) {
-            var perspective = new Sdk.Perspective(newPerspective.PerspectiveSequenceHeadCid, new PerspectiveQueries(newPerspective.PerspectiveSequenceHeadCid, _persistence));
+        await foreach (var newPerspective in _input.Reader.ReadAllAsync(sessionShutdown)) {
+            var perspective = new Sdk.Perspective(newPerspective.PerspectiveSequenceNodeCid, new PerspectiveQueries(newPerspective.PerspectiveSequenceNodeCid, _persistence));
             var reflection = new Reflection(decisionSequenceCid, query: null);
             var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries
             var timestamp = DateTime.UtcNow;
@@ -42,7 +47,6 @@ internal class StrategyController
             // Append this initiative to decision sequence
             decisionSequence = DecisionSequenceHead.NewInitiative(new DecisionSequenceNode(
                 actionSet: initiate.Initiatives,
-                perspectiveSequenceHead: perspective.LatestPerspectiveSequenceHead,
                 at: timestamp,
                 previous: decisionSequenceCid));
 
@@ -59,10 +63,7 @@ internal class StrategyController
                 });
             }
 
-            _messaging.Emit(new NewDecision() {
-                DecisionSequenceCid = decisionSequenceCid,
-                ActionSet = initiations
-            });
+            await _output.Writer.WriteAsync(new NewDecision(decisionSequenceCid));
         }
     }
 }
