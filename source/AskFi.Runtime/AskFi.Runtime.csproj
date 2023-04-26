@@ -7,14 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Modules\Perspective\PerspectiveQueries.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Modules\Perspective\PerspectiveQueries.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="System.Interactive.Async" Version="6.0.1" />
   </ItemGroup>
 
