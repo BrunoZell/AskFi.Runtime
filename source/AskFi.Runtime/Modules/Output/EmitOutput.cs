@@ -1,6 +1,7 @@
 using System.Threading.Channels;
+using AskFi.Runtime.Platform;
 
-namespace AskFi.Runtime.Platform;
+namespace AskFi.Runtime.Modules.Output;
 internal class EmitOutput<TMessage>
 {
     private readonly IPlatformMessaging _messaging;
@@ -14,8 +15,6 @@ internal class EmitOutput<TMessage>
 
     public async Task Run()
     {
-        await foreach (var output in _output.ReadAllAsync()) {
-            _messaging.Emit(output);
-        }
+        await foreach (var output in _output.ReadAllAsync())             _messaging.Emit(output);
     }
 }

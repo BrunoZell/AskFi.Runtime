@@ -1,6 +1,7 @@
 using System.Threading.Channels;
+using AskFi.Runtime.Platform;
 
-namespace AskFi.Runtime.Platform;
+namespace AskFi.Runtime.Modules.Input;
 internal class StreamInput<TMessage>
 {
     private readonly IPlatformMessaging _messaging;
@@ -16,8 +17,6 @@ internal class StreamInput<TMessage>
 
     public async Task Run(CancellationToken cancellationToken)
     {
-        await foreach (var input in _messaging.Listen<TMessage>(cancellationToken)) {
-            await _input.Writer.WriteAsync(input);
-        }
+        await foreach (var input in _messaging.Listen<TMessage>(cancellationToken))             await _input.Writer.WriteAsync(input);
     }
 }
