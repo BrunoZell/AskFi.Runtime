@@ -28,7 +28,7 @@ public class Scraper
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
-        var observation = ObserverModule.StartNew(observers, persistence, sessionShutdown: default);
+        var observation = new ObserverModule(observers, persistence);
         var perspectiveModule = new PerspectiveModule(persistence, observation.Output);
         var output = new EmitOutput<NewPerspective>(messaging, perspectiveModule.Output);
 
