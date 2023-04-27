@@ -63,6 +63,11 @@ type ObservationPool = {
 // ####  STRATEGY MODULE  ####
 // ###########################
 
+type ActionSet = {
+    /// All actions the strategy has decided to initiate.
+    /// Those are keyed by 'ActionId'.
+    Initiations: ActionInitiation array
+}
 and ActionInitiation = {
     /// The 'Action from IBroker<'Action> (type of the originating observer instance)
     ActionType: Type
@@ -70,20 +75,33 @@ and ActionInitiation = {
     ActionCid: ContentId
 }
 
-type ActionSet = {
-    /// All actions the strategy has decided to initiate.
-    /// Those are keyed by 'ActionId'.
-    Initiations: ActionInitiation array
+type BacktestEvaluationHead =
+    | Start of BacktestEvaluationStart
+    | Initiative of BacktestEvaluationNode
+and BacktestEvaluationStart = {
+    /// Links to first and latest perspective the backtest ran on.
+    LastPerspective: ContentId // PerspectiveSequenceHead
+}
+and BacktestEvaluationNode = {
+    /// Links previous backtest evaluation.
+    Previous: ContentId // BacktestEvaluationStart
+
+    /// What actions have been decided on by the backtested strategy.
+    ActionSet: ContentId // ActionSet
 }
 
-type DecisionSequenceHead =
-    | Start
-    | Initiative of Node:DecisionSequenceNode
-and DecisionSequenceNode = {
-    /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
-    Previous: ContentId // DecisionSequenceHead
+type LiveEvaluationHead =
+    | Start of LiveEvaluationStart
+    | Initiative of LiveEvaluationNode
+and LiveEvaluationStart = {
+    /// Links to first and earliest perspective this live execution ran on.
+    FirstPerspective: ContentId // PerspectiveSequenceHead
+}
+and LiveEvaluationNode = {
+    /// Links previous backtest evaluation.
+    Previous: ContentId // LiveEvaluationHead
 
-    /// What actions have been decided on.
+    /// What actions have been decided on by the executing strategy.
     ActionSet: ContentId // ActionSet
 }
 
