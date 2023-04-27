@@ -8,7 +8,8 @@ open System
 // #### OBSERVATION MODULE ####
 // ############################
 
-/// Generated immediately after an IObserver emitted a new observation.
+/// Generated immediately after an IObserver emitted a new observation grouping
+/// the observation with the latest local timestamp as of the runtime clock.
 type CapturedObservation<'Percept> = {
     /// Absolute timestamp of when this observation was recorded.
     /// As of runtime clock.
@@ -18,23 +19,26 @@ type CapturedObservation<'Percept> = {
     Observation: Sdk.Observation<'Percept>
 }
 
-/// Generated sequentially within an Observer Module to add relative time relations.
-type LinkedObservation = {
-    Observation: ContentId // CapturedObservation<'Percept>
+/// All captured obervations within an observer group are sequenced into
+/// an observation sequence. Isolated observation sequences are a form of
+/// entry point for new information into the system. Cids to such sequences
+/// are passed arround to share information.
+type ObservationSequenceHead =
+    | Beginning
+    | Happening of Node:ObservationSequenceNode
+and ObservationSequenceNode = {
+    /// Links previous ObservationSequenceHead to form a temporal order.
+    Previous: ContentId // ObservationSequenceHead
 
-    /// Introduces relative ordering between CapturedObservations within an Observer Module
-    Links: RelativeTimeLink array
-}
-and RelativeTimeLink = {
-    /// Links to a LinkedObservation that happened before the link-owning observation.
-    Before: ContentId
+    /// Cid to the then latest CapturedObservation<'Percept> that caused this update in perspective.
+    Observation: ContentId // CapturedObservation
 }
 
 // ##############################
 // ####  PERSPECTIVE MODULE  ####
 // ##############################
 
-/// A set of LinkedObservations are then merged into a Perspective Sequence.
+/// A set of observation sequence heads are then merged into a perspective sequence.
 /// This defines a temporal ordering between observations from different IObserver-instances and Observer Modules.
 type PerspectiveSequenceHead =
     | Beginning
@@ -43,8 +47,16 @@ and PerspectiveSequenceNode = {
     /// Links previous PerspectiveSequenceHead to form a temporal order.
     Previous: ContentId // PerspectiveSequenceHead
 
-    /// Cid to the then latest LinkedObservation that caused this update in perspective.
-    LinkedObservation: ContentId // LinkedObservation
+    /// Cid to the then latest observation that added information to the previous perspective.
+    /// It is referenced by the observation sequence head it was recorded in.
+    LatestObservation: ContentId // ObservationSequenceHead
+}
+
+/// A cluster-wide CRDT where all observations are merged into to form
+/// an ever-growing pool of observations.
+type ObservationPool = {
+    AggregatePerspective: ContentId
+    DroppedPerspectives: ContentId Set
 }
 
 // ###########################
