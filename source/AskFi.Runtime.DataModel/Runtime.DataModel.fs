@@ -136,3 +136,9 @@ and ExecutionSequenceNode = {
     /// What action has been executed.
     Action: ActionInitiation
 }
+
+/// A cluster-wide CRDT where all action executions are merged into to form
+/// an ever-growing pool of trace information.
+type ActionExecutionPool = {
+    AggregateExecutionSequence: ContentId // ExecutionSequenceHead
+}
