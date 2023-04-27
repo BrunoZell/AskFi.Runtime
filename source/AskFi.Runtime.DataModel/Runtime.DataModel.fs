@@ -14,6 +14,9 @@ type CapturedObservation<'Percept> = {
     /// Absolute timestamp of when this observation was recorded.
     /// As of runtime clock.
     At: DateTime
+    
+    /// The 'Percept from Observation<'Percept> (type of the originating observer instance)
+    PerceptType: Type
 
     /// All percepts that appeared at this instant, as emitted by an IObserver<'Percept> instance.
     Observation: Sdk.Observation<'Percept>
@@ -69,12 +72,15 @@ type ActionSet = {
     Initiations: ActionInitiation array
 }
 and ActionInitiation = {
-    /// The 'Action from IBroker<'Action> (type of the originating observer instance)
+    /// The 'Action from IBroker<'Action> (type as emitted by the deciding strategy.
     ActionType: Type
+
     /// Cid to the action information. Has type of ActionType.
     ActionCid: ContentId
 }
 
+/// Decision sequence for strategy executions along a perspective sequence, where
+/// decisions are made from now into the past.
 type BacktestEvaluationHead =
     | Start of BacktestEvaluationStart
     | Initiative of BacktestEvaluationNode
@@ -90,6 +96,8 @@ and BacktestEvaluationNode = {
     ActionSet: ContentId // ActionSet
 }
 
+/// Decision sequence for strategy executions on a live observation stream, where
+/// decisions are made from now into the future.
 type LiveEvaluationHead =
     | Start of LiveEvaluationStart
     | Initiative of LiveEvaluationNode
