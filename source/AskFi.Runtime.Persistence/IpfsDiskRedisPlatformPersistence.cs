@@ -1,7 +1,6 @@
+using AskFi.Runtime.Persistence.Caches;
 using AskFi.Runtime.Persistence.Encoding;
-using AskFi.Runtime.Persistence.InMemory;
 using AskFi.Runtime.Platform;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
 namespace AskFi.Runtime.Persistence;
@@ -10,34 +9,34 @@ public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence
 {
     private readonly ISerializer _serializer;
     private readonly ConnectionMultiplexer _redis;
-    private readonly ILogger? _logger;
 
     private readonly ObjectCache _inMemoryObjectCache = new();
+    private readonly DiskCache _diskCache;
 
     public IpfsDiskRedisPlatformPersistence(
         ISerializer serializer,
-        string redisEndpoint,
-        ILogger? logger = null)
+        DirectoryInfo localPersistenceDirectory,
+        string redisEndpoint)
     {
         _serializer = serializer;
+        _diskCache = new(localPersistenceDirectory);
         _redis = ConnectionMultiplexer.Connect(
             new ConfigurationOptions {
                 EndPoints = { redisEndpoint },
             });
-        _logger = logger;
     }
 
     public IpfsDiskRedisPlatformPersistence(
         ISerializer serializer,
-        EndPointCollection redisEndpoints,
-        ILogger? logger = null)
+        DirectoryInfo localPersistenceDirectory,
+        EndPointCollection redisEndpoints)
     {
         _serializer = serializer;
+        _diskCache = new(localPersistenceDirectory);
         _redis = ConnectionMultiplexer.Connect(
             new ConfigurationOptions {
                 EndPoints = redisEndpoints,
             });
-        _logger = logger;
     }
 
     public ContentId Cid<TDatum>(TDatum datum)
@@ -59,9 +58,20 @@ public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence
         }
 
         // 2. Try read from local disk
+        var fromDisk = await _diskCache.TryReadFromDisk(cid);
+        if (fromDisk is not null) {
+            // Deserialize loaded raw data
+            var datum = _serializer.Deserialize<TDatum>(cid, fromDisk);
+
+            // Insert into in-memory cid->obj mapping for future GET requests on that CID.
+            _inMemoryObjectCache.Set(cid, datum);
+
+            return datum;
+        }
+
         // 3. Try read from IPFS Cluster
 
-        throw new NotImplementedException();
+        throw new NotImplementedException("Reading from IPFS Cluster is not yet implemented.");
     }
 
     public ValueTask<bool> Pin(ContentId cid)
@@ -81,6 +91,7 @@ public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence
         // 2. Broadcast PUT via Redis
 
         // 3. Write data to disk for persistence
+        await _diskCache.WriteToDisk(cid, raw);
 
         // 4. Upload to IPFS Cluster
         // Todo: Call IPFS Cluster API
