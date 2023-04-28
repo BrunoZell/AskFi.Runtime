@@ -1,4 +1,4 @@
-namespace AskFi.Runtime.Persistence.Caches;
+namespace AskFi.Runtime.Persistence.Caching;
 
 public class DiskCache
 {

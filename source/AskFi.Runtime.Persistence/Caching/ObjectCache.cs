@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AskFi.Runtime.Persistence.Caches;
+namespace AskFi.Runtime.Persistence.Caching;
 
 /// <summary>
 /// Maintains a mapping from CIDs to a .NET object instance that results from deserializing that CID.

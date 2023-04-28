@@ -20,7 +20,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace AskFi.Runtime.Persistence.Caches;
+namespace AskFi.Runtime.Persistence.Caching;
 
 public static class Base32
 {

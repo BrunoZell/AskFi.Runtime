@@ -1,4 +1,4 @@
-using AskFi.Runtime.Persistence.Caches;
+using AskFi.Runtime.Persistence.Caching;
 using AskFi.Runtime.Persistence.Encoding;
 using AskFi.Runtime.Platform;
 using StackExchange.Redis;
