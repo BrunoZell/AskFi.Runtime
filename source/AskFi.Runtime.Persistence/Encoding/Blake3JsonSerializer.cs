@@ -1,5 +1,3 @@
-using System.Text;
-using AskFi.Runtime.Persistence.InMemory;
 using Blake3;
 using Newtonsoft.Json;
 
@@ -7,24 +5,19 @@ namespace AskFi.Runtime.Persistence.Encoding;
 
 public class Blake3JsonSerializer : ISerializer
 {
-    public EncodedIdea Serialize<TIdea>(TIdea value)
+    public (ContentId Cid, byte[] Raw) Serialize<TDatum>(TDatum datum)
     {
-        var json = JsonConvert.SerializeObject(value);
-        var bytes = Encoding.UTF8.GetBytes(json);
+        var json = JsonConvert.SerializeObject(datum);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(json);
         var hash = Hasher.Hash(bytes);
         var hashRaw = hash.AsSpanUnsafe().ToArray();
-
-        return new EncodedIdea() {
-            Cid = new ContentId(hashRaw),
-            Content = bytes
-        };
+        return (new ContentId(hashRaw), bytes);
     }
 
-    public TIdea Deserialize<TIdea>(EncodedIdea value)
+    public TDatum Deserialize<TDatum>(ContentId cid, byte[] raw)
     {
-        var json = Encoding.UTF8.GetString(value.Content);
-        var idea = JsonConvert.DeserializeObject<TIdea>(json);
-
-        return idea;
+        var json = System.Text.Encoding.UTF8.GetString(raw);
+        var datum = JsonConvert.DeserializeObject<TDatum>(json);
+        return datum!;
     }
 }
