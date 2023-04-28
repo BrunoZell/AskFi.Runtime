@@ -1,6 +1,8 @@
+using AskFi.Runtime.Messages;
 using AskFi.Runtime.Persistence.Caching;
 using AskFi.Runtime.Persistence.Encoding;
 using AskFi.Runtime.Platform;
+using Newtonsoft.Json;
 using StackExchange.Redis;
 
 namespace AskFi.Runtime.Persistence;
@@ -88,7 +90,12 @@ public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence
         // 2. Insert into in-memory cid->obj mapping for future GET requests on that CID.
         _inMemoryObjectCache.Set(cid, datum);
 
-        // 2. Broadcast PUT via Redis
+        // 2. Broadcast PUT via Redis (if payload is below 4KB)
+        if (raw.Length < 1024 * 4) {
+            var publisher = _redis.GetSubscriber();
+            var textMessage = JsonConvert.SerializeObject(new PersistencePut(cid, raw));
+            publisher.Publish("persistence", textMessage, CommandFlags.FireAndForget);
+        }
 
         // 3. Write data to disk for persistence
         await _diskCache.WriteToDisk(cid, raw);

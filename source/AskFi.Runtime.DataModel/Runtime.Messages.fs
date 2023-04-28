@@ -36,3 +36,9 @@ type ActionExecuted = {
     /// Cid to the newly created execution sequence head (DataModel.ExecutionSequenceHead)
     ExecutionSequenceHeadCid: ContentId
 }
+
+/// Broadcasted by persistence system for other nodes to eagerly receive data referenced in other messages.
+type PersistencePut = {
+    Cid: ContentId
+    Content: byte array
+}
