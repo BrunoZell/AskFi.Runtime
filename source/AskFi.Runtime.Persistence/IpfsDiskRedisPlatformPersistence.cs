@@ -51,28 +51,40 @@ public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence
         return cid;
     }
 
-    public ValueTask<TDatum> Get<TDatum>(ContentId value)
+    public async ValueTask<TDatum> Get<TDatum>(ContentId cid)
     {
         // 1. Try read from in-memory cid->obj mapping
+        if (_inMemoryObjectCache.TryGet(cid, out var c) && c is TDatum cached) {
+            return cached;
+        }
+
         // 2. Try read from local disk
         // 3. Try read from IPFS Cluster
 
         throw new NotImplementedException();
     }
 
-    public ValueTask<bool> Pin(ContentId value)
+    public ValueTask<bool> Pin(ContentId cid)
     {
         // Todo: Pin in IPFS Cluster
         return new(false);
     }
 
-    public ValueTask<ContentId> Put<TDatum>(TDatum value)
+    public async ValueTask<ContentId> Put<TDatum>(TDatum datum)
     {
-        // 1. Generate cid locally, insert in in-memory cid->obj mapping
-        // 2. Broadcast PUT via Redis
-        // 3. Write data to disk for persistence
-        // 4. Upload to IPFS Cluster
+        // 1. Generate CID and raw bytes locally
+        var (cid, raw) = _serializer.Serialize(datum);
 
-        throw new NotImplementedException();
+        // 2. Insert into in-memory cid->obj mapping for future GET requests on that CID.
+        _inMemoryObjectCache.Set(cid, datum);
+
+        // 2. Broadcast PUT via Redis
+
+        // 3. Write data to disk for persistence
+
+        // 4. Upload to IPFS Cluster
+        // Todo: Call IPFS Cluster API
+
+        return cid;
     }
 }
