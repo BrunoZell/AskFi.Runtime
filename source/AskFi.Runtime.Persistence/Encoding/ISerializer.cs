@@ -1,4 +1,6 @@
-﻿namespace AskFi.Runtime.Persistence;
+using AskFi.Runtime.Persistence.InMemory;
+
+namespace AskFi.Runtime.Persistence.Encoding;
 
 public interface ISerializer
 {

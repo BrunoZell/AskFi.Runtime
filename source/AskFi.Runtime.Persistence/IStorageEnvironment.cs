@@ -1,3 +1,5 @@
+using AskFi.Runtime.Persistence.InMemory;
+
 namespace AskFi.Runtime.Persistence;
 
 public interface IStorageEnvironment

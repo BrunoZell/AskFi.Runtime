@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
+using AskFi.Runtime.Persistence.Encoding;
 
-namespace AskFi.Runtime.Persistence;
+namespace AskFi.Runtime.Persistence.InMemory;
 
 public sealed class IdeaStore
 {
@@ -22,9 +23,7 @@ public sealed class IdeaStore
 
     private IdeaStorageCell GetStorageCell(ContentId contentId)
     {
-        if (Index.TryGetValue(contentId, out var storageCell)) {
-            return storageCell;
-        }
+        if (Index.TryGetValue(contentId, out var storageCell))             return storageCell;
 
         return Index[contentId] = new(contentId, _storageEnvironment);
     }

@@ -1,4 +1,4 @@
-namespace AskFi.Runtime.Persistence;
+namespace AskFi.Runtime.Persistence.InMemory;
 
 public class EncodedIdea
 {

@@ -1,8 +1,9 @@
 using System.Text;
+using AskFi.Runtime.Persistence.InMemory;
 using Blake3;
 using Newtonsoft.Json;
 
-namespace AskFi.Runtime.Persistence;
+namespace AskFi.Runtime.Persistence.Encoding;
 
 public class Blake3JsonSerializer : ISerializer
 {

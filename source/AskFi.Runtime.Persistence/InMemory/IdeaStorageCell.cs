@@ -1,4 +1,6 @@
-namespace AskFi.Runtime.Persistence;
+using AskFi.Runtime.Persistence.Encoding;
+
+namespace AskFi.Runtime.Persistence.InMemory;
 
 internal sealed class IdeaStorageCell
 {
@@ -23,9 +25,7 @@ internal sealed class IdeaStorageCell
 
     public async ValueTask<TIdea> Load<TIdea>(ISerializer serializer)
     {
-        if (_inMemoryIdea.Target is TIdea alive) {
-            return alive;
-        }
+        if (_inMemoryIdea.Target is TIdea alive)             return alive;
 
         // Not in memory. Try to read from disk.
 

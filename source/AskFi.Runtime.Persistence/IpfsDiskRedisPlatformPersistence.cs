@@ -1,3 +1,4 @@
+using AskFi.Runtime.Persistence.Encoding;
 using AskFi.Runtime.Platform;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
