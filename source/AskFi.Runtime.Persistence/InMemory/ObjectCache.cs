@@ -3,7 +3,10 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace AskFi.Runtime.Persistence.InMemory;
 
-internal sealed class InMemoryCache
+/// <summary>
+/// Maintains a mapping from CIDs to a .NET object instance that results from deserializing that CID.
+/// </summary>
+internal sealed class ObjectCache
 {
     private readonly ConcurrentDictionary<ContentId, WeakReference> _inMemoryCache = new();
 
