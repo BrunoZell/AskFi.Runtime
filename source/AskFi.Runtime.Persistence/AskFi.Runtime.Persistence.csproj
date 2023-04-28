@@ -8,7 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="Blake3" Version="0.5.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.104" />
   </ItemGroup>
 
   <ItemGroup>
