@@ -1,4 +1,5 @@
 using AskFi.Runtime.Persistence.Encoding;
+using AskFi.Runtime.Persistence.InMemory;
 using AskFi.Runtime.Platform;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
@@ -10,6 +11,8 @@ public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence
     private readonly ISerializer _serializer;
     private readonly ConnectionMultiplexer _redis;
     private readonly ILogger? _logger;
+
+    private readonly ObjectCache _inMemoryObjectCache = new();
 
     public IpfsDiskRedisPlatformPersistence(
         ISerializer serializer,
@@ -37,10 +40,15 @@ public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence
         _logger = logger;
     }
 
-    public ContentId Cid<TDatum>(TDatum value)
+    public ContentId Cid<TDatum>(TDatum datum)
     {
-        // Generate cid locally, insert in in-memory cid->obj mapping
-        throw new NotImplementedException();
+        // Generate CID locally
+        var (cid, raw) = _serializer.Serialize(datum);
+
+        // Insert into in-memory cid->obj mapping for future GET requests on that CID.
+        _inMemoryObjectCache.Set(cid, datum);
+
+        return cid;
     }
 
     public ValueTask<TDatum> Get<TDatum>(ContentId value)
