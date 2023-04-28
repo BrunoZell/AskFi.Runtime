@@ -8,33 +8,40 @@ open System
 // #### OBSERVATION MODULE ####
 // ############################
 
-/// Generated immediately after an IObserver emitted a new observation.
+/// Generated immediately after an IObserver emitted a new observation grouping
+/// the observation with the latest local timestamp as of the runtime clock.
 type CapturedObservation<'Percept> = {
     /// Absolute timestamp of when this observation was recorded.
     /// As of runtime clock.
     At: DateTime
+    
+    /// The 'Percept from Observation<'Percept> (type of the originating observer instance)
+    PerceptType: Type
 
     /// All percepts that appeared at this instant, as emitted by an IObserver<'Percept> instance.
     Observation: Sdk.Observation<'Percept>
 }
 
-/// Generated sequentially within an Observer Module to add relative time relations.
-type LinkedObservation = {
-    Observation: ContentId // CapturedObservation<'Percept>
+/// All captured obervations within an observer group are sequenced into
+/// an observation sequence. Isolated observation sequences are a form of
+/// entry point for new information into the system. Cids to such sequences
+/// are passed arround to share information.
+type ObservationSequenceHead =
+    | Beginning
+    | Happening of Node:ObservationSequenceNode
+and ObservationSequenceNode = {
+    /// Links previous ObservationSequenceHead to form a temporal order.
+    Previous: ContentId // ObservationSequenceHead
 
-    /// Introduces relative ordering between CapturedObservations within an Observer Module
-    Links: RelativeTimeLink array
-}
-and RelativeTimeLink = {
-    /// Links to a LinkedObservation that happened before the link-owning observation.
-    Before: ContentId
+    /// Cid to the then latest CapturedObservation<'Percept> that caused this update in perspective.
+    Observation: ContentId // CapturedObservation
 }
 
 // ##############################
 // ####  PERSPECTIVE MODULE  ####
 // ##############################
 
-/// A set of LinkedObservations are then merged into a Perspective Sequence.
+/// A set of observation sequence heads are then merged into a perspective sequence.
 /// This defines a temporal ordering between observations from different IObserver-instances and Observer Modules.
 type PerspectiveSequenceHead =
     | Beginning
@@ -43,35 +50,66 @@ and PerspectiveSequenceNode = {
     /// Links previous PerspectiveSequenceHead to form a temporal order.
     Previous: ContentId // PerspectiveSequenceHead
 
-    /// Cid to the then latest LinkedObservation that caused this update in perspective.
-    LinkedObservation: ContentId // LinkedObservation
+    /// Cid to the then latest observation that added information to the previous perspective.
+    /// It is referenced by the observation sequence head it was recorded in.
+    LatestObservation: ContentId // ObservationSequenceHead
+}
+
+/// A cluster-wide CRDT where all observations are merged into to form
+/// an ever-growing pool of observations.
+type ObservationPool = {
+    AggregatePerspective: ContentId
+    DroppedPerspectives: ContentId Set
 }
 
 // ###########################
 // ####  STRATEGY MODULE  ####
 // ###########################
 
-and ActionInitiation = {
-    /// The 'Action from IBroker<'Action> (type of the originating observer instance)
-    ActionType: Type
-    /// Cid to the action information. Has type of ActionType.
-    ActionCid: ContentId
-}
-
 type ActionSet = {
     /// All actions the strategy has decided to initiate.
     /// Those are keyed by 'ActionId'.
     Initiations: ActionInitiation array
 }
+and ActionInitiation = {
+    /// The 'Action from IBroker<'Action> (type as emitted by the deciding strategy.
+    ActionType: Type
 
-type DecisionSequenceHead =
-    | Start
-    | Initiative of Node:DecisionSequenceNode
-and DecisionSequenceNode = {
-    /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
-    Previous: ContentId // DecisionSequenceHead
+    /// Cid to the action information. Has type of ActionType.
+    ActionCid: ContentId
+}
 
-    /// What actions have been decided on.
+/// Decision sequence for strategy executions along a perspective sequence, where
+/// decisions are made from now into the past.
+type BacktestEvaluationHead =
+    | Start of BacktestEvaluationStart
+    | Initiative of BacktestEvaluationNode
+and BacktestEvaluationStart = {
+    /// Links to first and latest perspective the backtest ran on.
+    LastPerspective: ContentId // PerspectiveSequenceHead
+}
+and BacktestEvaluationNode = {
+    /// Links previous backtest evaluation.
+    Previous: ContentId // BacktestEvaluationStart
+
+    /// What actions have been decided on by the backtested strategy.
+    ActionSet: ContentId // ActionSet
+}
+
+/// Decision sequence for strategy executions on a live observation stream, where
+/// decisions are made from now into the future.
+type LiveEvaluationHead =
+    | Start of LiveEvaluationStart
+    | Initiative of LiveEvaluationNode
+and LiveEvaluationStart = {
+    /// Links to first and earliest perspective this live execution ran on.
+    FirstPerspective: ContentId // PerspectiveSequenceHead
+}
+and LiveEvaluationNode = {
+    /// Links previous backtest evaluation.
+    Previous: ContentId // LiveEvaluationHead
+
+    /// What actions have been decided on by the executing strategy.
     ActionSet: ContentId // ActionSet
 }
 
@@ -105,4 +143,10 @@ and ExecutionSequenceNode = {
     
     /// What action has been executed.
     Action: ActionInitiation
+}
+
+/// A cluster-wide CRDT where all action executions are merged into to form
+/// an ever-growing pool of trace information.
+type ActionExecutionPool = {
+    AggregateExecutionSequence: ContentId // ExecutionSequenceHead
 }

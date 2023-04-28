@@ -20,7 +20,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace AskFi.Runtime.Persistence;
+namespace AskFi.Runtime.Persistence.Caching;
 
 public static class Base32
 {
@@ -28,8 +28,7 @@ public static class Base32
     private const int Mask = 31;
     private const int Shift = 5;
 
-    private static int CharToInt(char c) => c switch
-    {
+    private static int CharToInt(char c) => c switch {
         'A' => 0,
         'B' => 1,
         'C' => 2,
@@ -83,8 +82,7 @@ public static class Base32
         var next = 0;
         var bitsLeft = 0;
         var charValue = 0;
-        foreach (var c in encoded)
-        {
+        foreach (var c in encoded) {
             charValue = CharToInt(c);
             if (charValue < 0)
                 throw new FormatException("Illegal character: `" + c + "`");
@@ -92,9 +90,8 @@ public static class Base32
             buffer <<= Shift;
             buffer |= charValue & Mask;
             bitsLeft += Shift;
-            if (bitsLeft >= 8)
-            {
-                result[next++] = (byte)(buffer >> (bitsLeft - 8));
+            if (bitsLeft >= 8) {
+                result[next++] = (byte)(buffer >> bitsLeft - 8);
                 bitsLeft -= 8;
             }
         }
@@ -118,7 +115,7 @@ public static class Base32
         if (length < 0)
             throw new ArgumentOutOfRangeException(nameof(length));
 
-        if ((offset + length) > data.Length)
+        if (offset + length > data.Length)
             throw new ArgumentOutOfRangeException();
 
         if (length == 0)
@@ -127,41 +124,34 @@ public static class Base32
         // SHIFT is the number of bits per output character, so the length of the
         // output is the length of the input multiplied by 8/SHIFT, rounded up.
         // The computation below will fail, so don't do it.
-        if (length >= (1 << 28))
+        if (length >= 1 << 28)
             throw new ArgumentOutOfRangeException(nameof(data));
 
-        var outputLength = ((length * 8) + Shift - 1) / Shift;
+        var outputLength = (length * 8 + Shift - 1) / Shift;
         var result = new StringBuilder(outputLength);
 
         var last = offset + length;
         int buffer = data[offset++];
         var bitsLeft = 8;
-        while (bitsLeft > 0 || offset < last)
-        {
+        while (bitsLeft > 0 || offset < last) {
             if (bitsLeft < Shift)
-            {
-                if (offset < last)
-                {
+                if (offset < last) {
                     buffer <<= 8;
                     buffer |= data[offset++] & 0xff;
                     bitsLeft += 8;
-                }
-                else
-                {
-                    int pad = Shift - bitsLeft;
+                } else {
+                    var pad = Shift - bitsLeft;
                     buffer <<= pad;
                     bitsLeft += pad;
                 }
-            }
 
-            int index = Mask & (buffer >> (bitsLeft - Shift));
+            var index = Mask & buffer >> bitsLeft - Shift;
             bitsLeft -= Shift;
             result.Append(Digits[index]);
         }
 
-        if (padOutput)
-        {
-            int padding = 8 - (result.Length % 8);
+        if (padOutput) {
+            var padding = 8 - result.Length % 8;
             if (padding > 0)
                 result.Append('=', padding == 8 ? 0 : padding);
         }
