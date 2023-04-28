@@ -20,7 +20,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace AskFi.Runtime.Persistence.Encoding;
+namespace AskFi.Runtime.Persistence;
 
 public static class Base32
 {
@@ -134,7 +134,8 @@ public static class Base32
         int buffer = data[offset++];
         var bitsLeft = 8;
         while (bitsLeft > 0 || offset < last) {
-            if (bitsLeft < Shift)                 if (offset < last) {
+            if (bitsLeft < Shift)
+                if (offset < last) {
                     buffer <<= 8;
                     buffer |= data[offset++] & 0xff;
                     bitsLeft += 8;
