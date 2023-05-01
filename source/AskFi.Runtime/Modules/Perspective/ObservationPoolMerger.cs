@@ -35,7 +35,20 @@ internal class ObservationPoolMerger
     public static async ValueTask<ObservationPool> Add(ObservationPool a, ObservationPool b, IPlatformPersistence persistence)
     {
         // 1: Find first common ancestor (which is the point where all previous observations are sequenced in exactly the same way)
+
+        async ValueTask<ContentId> FirstCommonAncestor()
+        {
+            // 1. Peek at ancestor perspective of a' or b' with the latest latest timestamp
+            // 2. If that perspectives content id is in the set, it's the first common ancestor
+            // 3. If not, add it to the set and continue crawling throug ancestors
+        }
+
         // 2: Re-apply remaining known observations by smallest timestamp first.
+
+        // Remove all perspective cids from the set from 1. which are included in the first common ancestor.
+        // Then sort all observations referenced by the remaining perspective cids by their trusted timestamp.
+        // Pick best & build perspective until no observations are left
+
         // 3: Memoize all perspective-cids that existed in either a or b but not in the result anymore and add them to 'droppedPerspectives'.
 
         var newObservationSet = _allIncludedLinkedObservations.Add(linkedObservationCid);
