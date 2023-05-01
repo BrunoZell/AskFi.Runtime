@@ -31,14 +31,13 @@ internal class PerspectiveMergeModule
             aggregatePerspective: emptyPerspectiveCid,
             droppedPerspectives: new FSharpSet<ContentId>(Enumerable.Empty<ContentId>()));
 
-        var observationPoolCid = _persistence.Cid(observationPool);
-
         await foreach (var newPerspective in _input.ReadAllAsync(cancellationToken)) {
             // Merge perspectives via the aggregatable observation pool CRDT
-            observationPool = observationPool + newPerspective.ObservationPool;
-            observationPoolCid = _persistence.Cid(observationPool);
+            var incomingObservationPool = await _persistence.Get<ObservationPool>(newPerspective.ObservationPool);
+            var mergedObservationPool = ObservationPoolMerger.Add(observationPool, incomingObservationPool, _persistence);
+            var mergedObservationPoolCid = _persistence.Cid(observationPool);
 
-            var newMergedPerspective = new NewPerspective(observationPoolCid);
+            var newMergedPerspective = new NewPerspective(mergedObservationPoolCid);
 
             await _output.Writer.WriteAsync(newMergedPerspective);
         }

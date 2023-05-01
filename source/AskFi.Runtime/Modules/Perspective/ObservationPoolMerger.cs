@@ -5,9 +5,9 @@ using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Modules.Perspective;
 
-internal class PerspectiveBuilder
+internal class ObservationPoolMerger
 {
-    private PerspectiveBuilder(
+    private ObservationPoolMerger(
         ImmutableHashSet<ContentId> observationSet,
         ImmutableSortedDictionary<DateTime, ContentId> timestampMap)
     {
@@ -15,7 +15,7 @@ internal class PerspectiveBuilder
         _absouteTimestampMap = timestampMap;
     }
 
-    private PerspectiveBuilder()
+    private ObservationPoolMerger()
     {
         _allIncludedLinkedObservations = ImmutableHashSet<ContentId>.Empty;
         _absouteTimestampMap = ImmutableSortedDictionary<DateTime, ContentId>.Empty;
@@ -32,8 +32,12 @@ internal class PerspectiveBuilder
     /// </summary>
     private readonly ImmutableSortedDictionary<DateTime, ContentId> _absouteTimestampMap;
 
-    public async ValueTask<PerspectiveBuilder> WithObservation<TPercept>(ContentId linkedObservationCid, IPlatformPersistence persistence)
+    public static async ValueTask<ObservationPool> Add(ObservationPool a, ObservationPool b, IPlatformPersistence persistence)
     {
+        // 1: Find first common ancestor (which is the point where all previous observations are sequenced in exactly the same way)
+        // 2: Re-apply remaining known observations by smallest timestamp first.
+        // 3: Memoize all perspective-cids that existed in either a or b but not in the result anymore and add them to 'droppedPerspectives'.
+
         var newObservationSet = _allIncludedLinkedObservations.Add(linkedObservationCid);
 
         if (newObservationSet == _allIncludedLinkedObservations) {
@@ -66,7 +70,7 @@ internal class PerspectiveBuilder
             var newObservationPerspectiveCid = await persistence.Put(newObservationPerspective);
 
             var updatedTimestampMap = trimmedTimestampMap.Add(capturedObservation.At, newObservationPerspectiveCid);
-            return new PerspectiveBuilder(newObservationSet, updatedTimestampMap);
+            return new ObservationPoolMerger(newObservationSet, updatedTimestampMap);
         } else {
             // New discrete timestamp. Build on perspective before
             var newObservationPerspective = PerspectiveSequenceHead.NewHappening(new(
@@ -76,7 +80,7 @@ internal class PerspectiveBuilder
             var newObservationPerspectiveCid = await persistence.Put(newObservationPerspective);
 
             var updatedTimestampMap = trimmedTimestampMap.Add(capturedObservation.At, newObservationPerspectiveCid);
-            return new PerspectiveBuilder(newObservationSet, updatedTimestampMap);
+            return new ObservationPoolMerger(newObservationSet, updatedTimestampMap);
         }
     }
 }

@@ -1,6 +1,5 @@
 module AskFi.Runtime.DataModel
 
-open AskFi
 open AskFi.Runtime.Persistence
 open System
 
@@ -10,7 +9,7 @@ open System
 
 /// Generated immediately after an IObserver emitted a new observation grouping
 /// the observation with the latest local timestamp as of the runtime clock.
-type CapturedObservation<'Percept> = {
+type CapturedObservation = {
     /// Absolute timestamp of when this observation was recorded.
     /// As of runtime clock.
     At: DateTime
@@ -19,7 +18,7 @@ type CapturedObservation<'Percept> = {
     PerceptType: Type
 
     /// All percepts that appeared at this instant, as emitted by an IObserver<'Percept> instance.
-    Observation: Sdk.Observation<'Percept>
+    Observation: ContentId // Sdk.Observation<'Percept>
 }
 
 /// All captured obervations within an observer group are sequenced into
@@ -33,7 +32,7 @@ and ObservationSequenceNode = {
     /// Links previous ObservationSequenceHead to form a temporal order.
     Previous: ContentId // ObservationSequenceHead
 
-    /// Cid to the then latest CapturedObservation<'Percept> that caused this update in perspective.
+    /// Cid to the then latest CapturedObservation that caused this update in perspective.
     Observation: ContentId // CapturedObservation
 }
 
