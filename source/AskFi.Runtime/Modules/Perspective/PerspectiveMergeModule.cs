@@ -1,6 +1,9 @@
 using System.Threading.Channels;
 using AskFi.Runtime.Messages;
+using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
+using Microsoft.FSharp.Collections;
+using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Modules.Perspective;
 internal class PerspectiveMergeModule
@@ -22,11 +25,20 @@ internal class PerspectiveMergeModule
 
     public async Task Run(CancellationToken cancellationToken)
     {
+        var emptyPerspective = PerspectiveSequenceHead.Beginning;
+        var emptyPerspectiveCid = _persistence.Cid(emptyPerspective);
+        var observationPool = new ObservationPool(
+            aggregatePerspective: emptyPerspectiveCid,
+            droppedPerspectives: new FSharpSet<ContentId>(Enumerable.Empty<ContentId>()));
+
+        var observationPoolCid = _persistence.Cid(observationPool);
+
         await foreach (var newPerspective in _input.ReadAllAsync(cancellationToken)) {
-            // Todo: Merge perspectives
-            var newMergedPerspective = new NewPerspective(
-                perspectiveSequenceHeadCid: default,
-                rewriteDepth: 0);
+            // Merge perspectives via the aggregatable observation pool CRDT
+            observationPool = observationPool + newPerspective.ObservationPool;
+            observationPoolCid = _persistence.Cid(observationPool);
+
+            var newMergedPerspective = new NewPerspective(observationPoolCid);
 
             await _output.Writer.WriteAsync(newMergedPerspective);
         }

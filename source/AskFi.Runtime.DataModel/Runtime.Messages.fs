@@ -14,15 +14,8 @@ type NewObservation = {
 
 /// Represents a new perspective
 type NewPerspective = {
-    /// Cid to the newly created perspective sequence head (DataModel.PerspectiveSequenceHead)
-    PerspectiveSequenceHeadCid: ContentId
-
-    /// How many nodes before the one specified above have been
-    /// rewritten compared to the previously emitted new perspective
-    /// of the perspective module instance.
-    /// A rewrite depth of zero means only the latest node has been
-    /// added an no historic rewrites occured.
-    RewriteDepth: uint
+    /// Cid to the latest merged observation pool CRDT (DataModel.ObservationPool)
+    ObservationPool: ContentId
 }
 
 /// Message emitted from Strategy Module when a non-inaction decision has been made
