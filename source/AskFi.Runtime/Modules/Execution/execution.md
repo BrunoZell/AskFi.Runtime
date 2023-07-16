@@ -3,4 +3,4 @@
 ## Processing Pipeline
 
 1. Input `NewDecision`
-2. 
+2. For each initiative
