@@ -30,4 +30,5 @@ type ActionExecuted = {
 type PersistencePut = {
     Cid: ContentId
     Content: byte array
+    TDatum: System.Type
 }
