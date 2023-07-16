@@ -6,6 +6,10 @@ open System
 // ######################
 // #### OBSERVATIONS ####
 // ######################
+//
+// Observations are the main entry point of data flowing into the system.
+// Keeping a handle on created observation sequences therefore is important
+// if the data should not get lost.
 
 /// Generated immediately after an IObserver emitted a new observation grouping
 /// the observation with the latest local timestamp as of the runtime clock.
@@ -39,6 +43,12 @@ and ObservationSequenceNode = {
 // #####################
 // ####  EXECUTION  ####
 // #####################
+//
+// Action execution traces are the other entry point of data flowing into the system,
+// which include the information gained from executing certain actions.
+// Keeping a handle on created action execution sequences therefore is important
+// if the data should not get lost.
+
 
 type ActionSet = {
     /// All actions the strategy has decided to initiate.
@@ -70,23 +80,17 @@ type ActionExecutionResult = {
     CompletionTimestamp: DateTime
 }
 
-/// An execution sequence is produced by a Broker Group, which forms the second type
+/// An action sequence is produced by a Broker Group, which forms the second type
 /// of data entry into the system, holding information we got from executing actions.
-type ExecutionSequenceHead =
+type ActionSequenceHead =
     | Identity of Nonce:uint64
-    | Execution of Node:ExecutionSequenceNode
-and ExecutionSequenceNode = {
+    | Action of Node:ActionSequenceNode
+and ActionSequenceNode = {
     /// Links previous decision.
-    Previous: ContentId // ExecutionSequenceHead
+    Previous: ContentId // ActionSequenceHead
 
     /// What actions have been executed.
     Executed: ActionSet
-}
-
-/// A cluster-wide CRDT where all action executions are merged into to form
-/// an ever-growing pool of trace information.
-type ActionExecutionPool = {
-    AggregateExecutionSequence: ContentId // ExecutionSequenceHead
 }
 
 // ##################
@@ -104,16 +108,40 @@ type ActionExecutionPool = {
 type KnowledgeBase = {
     /// Maps ObservationSequenceHead.Identity as the observation sequence id
     /// to the latest known ObservationSequenceHead.Observation
-    IncludedObservationSequences: Map<ContentId, ContentId list> // Map<ObservationSequenceHead, ObservationSequenceHead list>
+    Observations: Map<ContentId, ContentId list> // Map<ObservationSequenceHead, ObservationSequenceHead list>
     
-    /// Maps ExecutionSequenceHead.Identity as the observation sequence id
-    /// to the latest known ExecutionSequenceHead.Execution
-    IncludedExecutionSequences: Map<ContentId, ContentId list> // Map<ExecutionSequenceHead, ExecutionSequenceHead list>
+    /// Maps ActionSequenceHead.Identity as the observation sequence id
+    /// to the latest known ActionSequenceHead.Action
+    Actions: Map<ContentId, ContentId list> // Map<ActionSequenceHead, ActionSequenceHead list>
 }
 
-// ######################
-// ####  STRATEGIES  ####
-// ######################
+// ###################
+// ####  CONTEXT  ####
+// ###################
+//
+// Sequencer produce context sequences, with each context adding one and only one new observation (or act) to the sequence per node.
+// Different implementations may sequence on different timestamps (observer or sequencer) or handle late arriving data differently (drop or rewind, up to a threshold)
+
+type ContextSequenceHead =
+    | Identity of KnowledgeBase:ContentId // Cid of KnowledgeBase
+    | Context of Node:ContextSequenceNode
+and ContextSequenceNode = {
+    /// Links previous context sequence head
+    Previous: ContentId // ContextSequenceHead
+
+    /// What new observation got appended to this context sequence.
+    Executed: ActionSet
+}
+
+/// Output type produced by a wrapped sequencer, referencing all context sequence heads it every produced,
+/// even if there was a rewind and on top of another head got built.
+type ContextHistory = {
+    // The last published context sequence, with the most information of all references context sequences.
+    Latest: ContentId // ContextSequence
+
+    // Referencing all published context sequences that since have been abandoned due to a rewind from late arriving data.
+    Dropped: ContentId list // ContextSequence list
+}
 
 /// Decision sequence for strategy executions along a perspective sequence, where
 /// decisions are made from now into the past.
