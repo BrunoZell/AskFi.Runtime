@@ -2,14 +2,19 @@ namespace AskFi.Runtime.Messages
 
 open AskFi.Runtime.Persistence
 
-/// Message from Observer Module emitted on each new received observation
+/// Message from Observer Module emitted on each new received observation,
+/// hopefully appended to its previous version of the single observation sequence it produces.
 type NewObservation = {
-    /// Cid to the newly produced CapturedObservation
-    CapturedObservationCid: ContentId
+    /// Cid to the original ObservationSequenceHead.Identity of the newly produced observation sequence head.
+    ObservationSequenceIdentityCid: ContentId
+
+    /// Cid to the newly produced ObservationSequenceHead.Observation
+    ObservationSequenceHeadCid: ContentId
 }
 
-/// Represents a new perspective
-type NewPerspective = {
+/// Nodes send this message to gossip the observation pool.
+/// Observation pool merger send them out when they received a NewObservation message.
+type NewObservationPool = {
     /// Cid to the latest merged observation pool CRDT (DataModel.ObservationPool)
     ObservationPool: ContentId
 }

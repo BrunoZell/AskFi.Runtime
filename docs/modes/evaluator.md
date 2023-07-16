@@ -5,10 +5,6 @@ Operating _Perspective Module_, _Context Module_, and _Strategy Module_ to run c
 | Type                          | cid | get | put | pin |
 | ----------------------------- | --- | --- | --- | --- |
 | `CapturedObservation`         |     | ✅  |    |      |
-| `LinkedObservation`           |     | ✅  |    |      |
-| `RelativeTimeLink`            |     | ✅  |    |      |
-| `PerspectiveSequenceHead`     |     | ✅ |     |      |
-| `PerspectiveSequenceNode`     |     | ✅ |     |      |
 | `DecisionSequenceHead`        | ✅  |     | ✅ | ✅  |
 | `DecisionSequenceNode`        | ✅  |     | ✅ | ✅  |
 | `ActionSet`                   | ✅  |     | ✅ | ✅  |

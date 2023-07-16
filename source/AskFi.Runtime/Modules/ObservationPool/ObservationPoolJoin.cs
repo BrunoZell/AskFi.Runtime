@@ -5,40 +5,40 @@ using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Modules.Perspective;
 
-internal class ObservationPoolMerger
+internal class ObservationPoolJoin
 {
-    private ObservationPoolMerger(
+    private ObservationPoolJoin(
         ImmutableHashSet<ContentId> observationSet,
         ImmutableSortedDictionary<DateTime, ContentId> timestampMap)
     {
-        _allIncludedLinkedObservations = observationSet;
+        _allIncludedCapturedObservations = observationSet;
         _absouteTimestampMap = timestampMap;
     }
 
-    private ObservationPoolMerger()
+    private ObservationPoolJoin()
     {
-        _allIncludedLinkedObservations = ImmutableHashSet<ContentId>.Empty;
+        _allIncludedCapturedObservations = ImmutableHashSet<ContentId>.Empty;
         _absouteTimestampMap = ImmutableSortedDictionary<DateTime, ContentId>.Empty;
     }
 
     /// <summary>
-    /// Set of all <see cref="ContentId"/> of <see cref="LinkedObservation"/> included in this builders perspective
+    /// Set of all <see cref="ContentId"/> of <see cref="CapturedObservation"/> included in this builders perspective
     /// </summary>
-    private readonly ImmutableHashSet<ContentId> _allIncludedLinkedObservations;
+    private readonly ImmutableHashSet<ContentId> _allIncludedCapturedObservations;
 
     /// <summary>
-    /// Maps every recorded discrete timestamp to the <see cref="ContentId"/> of the <see cref="PerspectiveSequenceNode"/> with
+    /// Maps every recorded discrete timestamp to the <see cref="ContentId"/> of the <see cref="ObservationPool.IncludedObservationSequences"/> with
     /// the latest observation recorded at that timestamp.
     /// </summary>
     private readonly ImmutableSortedDictionary<DateTime, ContentId> _absouteTimestampMap;
 
     public static async ValueTask<ObservationPool> Add(ObservationPool a, ObservationPool b, IPlatformPersistence persistence)
     {
-        // 1: Find first common ancestor (which is the point where all previous observations are sequenced in exactly the same way)
+        // 1: Find first common ancestor (which is the point where all previous captured observations are exactly the same)
 
         async ValueTask<ContentId> FirstCommonAncestor()
         {
-            // 1. Peek at ancestor perspective of a' or b' with the latest latest timestamp
+            // 1. Peek at ancestor pool of a' or b' with the latest latest timestamp
             // 2. If that perspectives content id is in the set, it's the first common ancestor
             // 3. If not, add it to the set and continue crawling throug ancestors
         }
@@ -51,15 +51,14 @@ internal class ObservationPoolMerger
 
         // 3: Memoize all perspective-cids that existed in either a or b but not in the result anymore and add them to 'droppedPerspectives'.
 
-        var newObservationSet = _allIncludedLinkedObservations.Add(linkedObservationCid);
+        var newObservationSet = _allIncludedCapturedObservations.Add(linkedObservationCid);
 
-        if (newObservationSet == _allIncludedLinkedObservations) {
+        if (newObservationSet == _allIncludedCapturedObservations) {
             // Observation already included
             return this;
         }
 
-        var linkedObservation = await persistence.Get<LinkedObservation>(linkedObservationCid);
-        var capturedObservation = await persistence.Get<CapturedObservation<TPercept>>(linkedObservation.Observation);
+        var capturedObservation = await persistence.Get<CapturedObservation>(linkedObservation.Observation);
 
         var invalidatedPerspectives = _absouteTimestampMap
             .Where(kvp => kvp.Key > capturedObservation.At);
@@ -83,7 +82,7 @@ internal class ObservationPoolMerger
             var newObservationPerspectiveCid = await persistence.Put(newObservationPerspective);
 
             var updatedTimestampMap = trimmedTimestampMap.Add(capturedObservation.At, newObservationPerspectiveCid);
-            return new ObservationPoolMerger(newObservationSet, updatedTimestampMap);
+            return new ObservationPoolJoin(newObservationSet, updatedTimestampMap);
         } else {
             // New discrete timestamp. Build on perspective before
             var newObservationPerspective = PerspectiveSequenceHead.NewHappening(new(
@@ -93,7 +92,7 @@ internal class ObservationPoolMerger
             var newObservationPerspectiveCid = await persistence.Put(newObservationPerspective);
 
             var updatedTimestampMap = trimmedTimestampMap.Add(capturedObservation.At, newObservationPerspectiveCid);
-            return new ObservationPoolMerger(newObservationSet, updatedTimestampMap);
+            return new ObservationPoolJoin(newObservationSet, updatedTimestampMap);
         }
     }
 }

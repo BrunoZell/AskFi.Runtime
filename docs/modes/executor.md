@@ -1,6 +1,6 @@
 # Runtime Mode: Executor
 
-## Configuration
+## Processing Pipeline
 
 1. Input `NewDecision`
 2. Executor Module

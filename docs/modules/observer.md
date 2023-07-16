@@ -14,20 +14,6 @@ An _Observation_ can have multiple _Percepts_ in case multiple percepts appeared
 
 Generated immediately after an _`IObserver`-Instance_ emitted a new observation. An absolute timestamp of when this observation was recorded is attached. For that, the configured runtime clock. is used.
 
-### `LinkedObservation`, `RelativeTimeLink`
-
-Generated sequentially within an ObserverGroup to add relative time relations.
-
-Introduces relative ordering between CapturedObservations within an ObserverGroup
-
-Links to a LinkedObservation that happened before the link-owning observation.
-
-All LinkedObservations produced within a single ObserverGroup are sequenced into a ObservationGroupSequence.
-This defines an ordering between observations from different IObserver-instances in addition to the absolute
-timestamp which may not be exactl accurate.
-
 ## Component Exeution
 
-Observations from all Observer-instances are eagery pulled and turned into `CapturedObservation<_>` by attaching the current timestamp as by the Runtime clock.
-
-On each new `CapturedObservation<_>`, a new `LinkedObservation` is created which links all most recent observations of other Observer-instances within the _Observer Module_ via a "$new was observed before $latest". This introduces relative time ordering for all Observations produced within an _Observer Module_. `LinkedObservations` are then peristed and pinned via the platform persistence subsystem.
+Observations from all Observer-instances are eagery pulled and turned into `CapturedObservation<_>` by attaching the current timestamp as by the runtime clock.

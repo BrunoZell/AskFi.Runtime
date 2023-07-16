@@ -11,7 +11,7 @@ internal class StrategyModule
 {
     private readonly Func<Reflection, Sdk.Perspective, Decision> _strategy;
     private readonly IPlatformPersistence _persistence;
-    private readonly ChannelReader<NewPerspective> _input;
+    private readonly ChannelReader<NewObservationPool> _input;
     private readonly Channel<NewDecision> _output;
 
     public ChannelReader<NewDecision> Output => _output;
@@ -19,7 +19,7 @@ internal class StrategyModule
     public StrategyModule(
         Func<Reflection, Sdk.Perspective, Decision> strategy,
         IPlatformPersistence persistence,
-        ChannelReader<NewPerspective> input)
+        ChannelReader<NewObservationPool> input)
     {
         _strategy = strategy;
         _persistence = persistence;
@@ -32,7 +32,7 @@ internal class StrategyModule
         var decisionSequence = DecisionSequenceHead.Start;
         var decisionSequenceCid = await _persistence.Put(decisionSequence);
 
-        await foreach (var newPerspective in _input.ReadAllAsync(sessionShutdown)) {
+        await foreach (var pool in _input.ReadAllAsync(sessionShutdown)) {
             var perspective = new Sdk.Perspective(query: null);
             var reflection = new Reflection(query: null);
             var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries

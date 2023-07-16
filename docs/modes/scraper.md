@@ -1,15 +1,21 @@
 # Runtime Mode: Scraper
 
-## Configuration
+## Processing Pipeline
 
 1. Observer Module with custom `IObserver`-Instances
-2. Perspective Module
-3. Output `NewPerspective`
+2. Output `NewObservation`
+
+## Message Usage
+
+| Runtime Message Type          | listening | broadcasting |
+| ----------------------------- | --- | --- |
+| `NewObservationPool`          |     | ✅ |
+| `PersistencePut`              | ✅ | ✅ |
 
 ## Persistence Usage
 
-| Type                          | cid | get | put | pin |
+| Runtime Data Model Type       | cid | get | put | pin |
 | ----------------------------- | --- | --- | --- | --- |
+| `ObservationSequenceHead`     | ✅  |     | ✅ |  ✅  |
+| `ObservationSequenceNode`     | ✅  |     | ✅ |  ✅  |
 | `CapturedObservation`         | ✅  |     | ✅ |  ✅  |
-| `LinkedObservation`           | ✅  |     | ✅ |  ✅  |
-| `RelativeTimeLink`            | ✅  |     | ✅ |  ✅  |

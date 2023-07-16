@@ -9,12 +9,12 @@ namespace AskFi.Runtime;
 
 public class Evaluator
 {
-    private readonly StreamInput<NewPerspective> _input;
+    private readonly StreamInput<NewObservationPool> _input;
     private readonly StrategyModule _strategyModule;
     private readonly EmitOutput<NewDecision> _output;
 
     private Evaluator(
-        StreamInput<NewPerspective> input,
+        StreamInput<NewObservationPool> input,
         StrategyModule strategyModule,
         EmitOutput<NewDecision> output)
     {
@@ -28,7 +28,7 @@ public class Evaluator
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
-        var input = new StreamInput<NewPerspective>(messaging);
+        var input = new StreamInput<NewObservationPool>(messaging);
         var strategyModule = new StrategyModule(strategy, persistence, input.Output);
         var output = new EmitOutput<NewDecision>(messaging, strategyModule.Output);
 

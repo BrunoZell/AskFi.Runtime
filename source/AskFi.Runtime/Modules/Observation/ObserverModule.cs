@@ -33,7 +33,7 @@ internal sealed class ObserverModule
         await using var observerGroupTask = ObserverGroup.StartNew(_observers, _persistence, _output.Writer, cancellationToken);
 
         try {
-            // Wait until cancelled.
+            // Wait until canceled.
             await Task.Delay(0, cancellationToken);
         } catch (OperationCanceledException) {
             // Cancellation expected.

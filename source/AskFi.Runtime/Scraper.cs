@@ -10,12 +10,12 @@ public class Scraper
 {
     private readonly ObserverModule _observerModule;
     private readonly PerspectiveModule _perspectiveModule;
-    private readonly EmitOutput<NewPerspective> _output;
+    private readonly EmitOutput<NewObservationPool> _output;
 
     private Scraper(
         ObserverModule observerModule,
         PerspectiveModule perspectiveModule,
-        EmitOutput<NewPerspective> output)
+        EmitOutput<NewObservationPool> output)
     {
         _observerModule = observerModule;
         _perspectiveModule = perspectiveModule;
@@ -30,7 +30,7 @@ public class Scraper
     {
         var observation = new ObserverModule(observers, persistence);
         var perspectiveModule = new PerspectiveMergeModule(persistence, observation.Output);
-        var output = new EmitOutput<NewPerspective>(messaging, perspectiveModule.Output);
+        var output = new EmitOutput<NewObservationPool>(messaging, perspectiveModule.Output);
 
         return new(observation, perspectiveModule, output);
     }

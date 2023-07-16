@@ -3,9 +3,9 @@ module AskFi.Runtime.DataModel
 open AskFi.Runtime.Persistence
 open System
 
-// ############################
-// #### OBSERVATION MODULE ####
-// ############################
+// ######################
+// #### OBSERVATIONS ####
+// ######################
 
 /// Generated immediately after an IObserver emitted a new observation grouping
 /// the observation with the latest local timestamp as of the runtime clock.
@@ -13,7 +13,7 @@ type CapturedObservation = {
     /// Absolute timestamp of when this observation was recorded.
     /// As of runtime clock.
     At: DateTime
-    
+
     /// The 'Percept from Observation<'Percept> (type of the originating observer instance)
     PerceptType: Type
 
@@ -26,8 +26,8 @@ type CapturedObservation = {
 /// entry point for new information into the system. Cids to such sequences
 /// are passed around to share information.
 type ObservationSequenceHead =
-    | Beginning
-    | Happening of Node:ObservationSequenceNode
+    | Identity of Nonce:uint64
+    | Observation of Node:ObservationSequenceNode
 and ObservationSequenceNode = {
     /// Links previous ObservationSequenceHead to form a temporal order.
     Previous: ContentId // ObservationSequenceHead
@@ -36,34 +36,20 @@ and ObservationSequenceNode = {
     Observation: ContentId // CapturedObservation
 }
 
-// ##############################
-// ####  PERSPECTIVE MODULE  ####
-// ##############################
-
-/// A set of observation sequence heads are then merged into a perspective sequence.
-/// This defines a temporal ordering between observations from different IObserver-instances and Observer Modules.
-type PerspectiveSequenceHead =
-    | Beginning
-    | Happening of Node:PerspectiveSequenceNode
-and PerspectiveSequenceNode = {
-    /// Links previous PerspectiveSequenceHead to form a temporal order.
-    Previous: ContentId // PerspectiveSequenceHead
-
-    /// Cid to the then latest observation that added information to the previous perspective.
-    /// It is referenced by the observation sequence head it was recorded in.
-    LatestObservation: ContentId // ObservationSequenceHead
-}
-
-/// A cluster-wide CRDT where all observations are merged into to form
-/// an ever-growing pool of observations.
+/// A set of observation sequence heads are then merged into an observation pool.
+/// With observation sequences being the root data entry point for all observations in the system,
+/// an observation pool instance references a specific set of those.
+/// When two observation pools are merged, their greatest sum is taken, i.e. that with most information,
+/// what include all information from both.
 type ObservationPool = {
-    AggregatePerspective: ContentId
-    DroppedPerspectives: ContentId Set
+    /// Maps ObservationSequenceHead.Identity as the observation sequence id
+    /// to the latest known ObservationSequenceHead.Observation
+    IncludedObservationSequences: Map<ContentId, ContentId> // Map<ObservationSequenceHead, ObservationSequenceHead>
 }
 
-// ###########################
-// ####  STRATEGY MODULE  ####
-// ###########################
+// ######################
+// ####  STRATEGIES  ####
+// ######################
 
 type ActionSet = {
     /// All actions the strategy has decided to initiate.
@@ -112,9 +98,9 @@ and LiveEvaluationNode = {
     ActionSet: ContentId // ActionSet
 }
 
-// ############################
-// ####  EXECUTION MODULE  ####
-// ############################
+// #####################
+// ####  EXECUTION  ####
+// #####################
 
 type ActionExecutionTrace =
     /// Data emitted by the IBroker action execution. Could include an execution id, transaction, or validity proofs.
@@ -125,7 +111,7 @@ type ActionExecutionTrace =
 type ActionExecutionResult = {
     /// Trace output from broker.
     Trace: ActionExecutionTrace
-    
+
     /// When the used IBroker implementation started executing.
     InitiationTimestamp: DateTime
 
@@ -139,7 +125,7 @@ type ExecutionSequenceHead =
 and ExecutionSequenceNode = {
     /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
     Previous: ContentId // ExecutionSequenceHead
-    
+
     /// What action has been executed.
     Action: ActionInitiation
 }

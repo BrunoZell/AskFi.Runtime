@@ -19,8 +19,7 @@ To stop the pipeline, cancel the passed `cancellationToken`.
 List of runtime modules:
 
 - [Observer Module](modules/observer.md)
-- [Perspective Module](modules/perspective.md)
-- Perspective Merge Module
+- [Observation Pool Module](modules/perspective.md)
 - Strategy Module
 - Execution Module
 
