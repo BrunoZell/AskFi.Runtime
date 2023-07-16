@@ -7,7 +7,7 @@ using StackExchange.Redis;
 
 namespace AskFi.Runtime.Messaging;
 
-public class RedisPlatformMessaging : IPlatformMessaging
+public class RedisPlatformMessaging : IPlatformMessaging, IAsyncDisposable
 {
     private readonly ConnectionMultiplexer _redis;
     private readonly ILogger? _logger;
@@ -87,5 +87,10 @@ public class RedisPlatformMessaging : IPlatformMessaging
 
         var channel = typeof(TMessage).Name;
         return channel;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _redis.DisposeAsync();
     }
 }
