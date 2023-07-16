@@ -146,6 +146,12 @@ type ContextHistory = {
     Dropped: ContentId list // ContextSequence list
 }
 
+// ####################
+// ####  Strategy  ####
+// ####################
+//
+// Strategies are encoded roles that analyze information from a context sequence
+
 /// Decision sequence for strategy executions along a context sequence, where
 /// decisions are made from now into the future using the same strategy.
 /// It is produced by the runtime modules 'Live Strategy' and 'Backtester',
