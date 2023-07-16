@@ -10,12 +10,12 @@ public class Broker
 {
     private readonly StreamInput<NewDecision> _input;
     private readonly ExecutionModule _executionModule;
-    private readonly EmitOutput<ActionExecuted> _output;
+    private readonly EmitOutput<ActionExecution> _output;
 
     private Broker(
         StreamInput<NewDecision> input,
         ExecutionModule executionModule,
-        EmitOutput<ActionExecuted> output)
+        EmitOutput<ActionExecution> output)
     {
         _input = input;
         _executionModule = executionModule;
@@ -29,7 +29,7 @@ public class Broker
     {
         var input = new StreamInput<NewDecision>(messaging);
         var executionModule = new ExecutionModule(broker, persistence, input.Output);
-        var output = new EmitOutput<ActionExecuted>(messaging, executionModule.Output);
+        var output = new EmitOutput<ActionExecution>(messaging, executionModule.Output);
 
         return new(input, executionModule, output);
     }

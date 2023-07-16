@@ -9,9 +9,9 @@ public class ExecutionModule
     private readonly BrokerMultiplexer _brokerMultiplexer;
     private readonly IPlatformPersistence _persistence;
     private readonly ChannelReader<NewDecision> _input;
-    private readonly Channel<ActionExecuted> _output;
+    private readonly Channel<ActionExecution> _output;
 
-    public ChannelReader<ActionExecuted> Output => _output.Reader;
+    public ChannelReader<ActionExecution> Output => _output.Reader;
 
     public ExecutionModule(
         IReadOnlyDictionary<Type, object> brokers,
@@ -21,7 +21,7 @@ public class ExecutionModule
         _brokerMultiplexer = new BrokerMultiplexer(brokers, persistence);
         _persistence = persistence;
         _input = input;
-        _output = Channel.CreateUnbounded<ActionExecuted>();
+        _output = Channel.CreateUnbounded<ActionExecution>();
     }
 
     public async Task Run(CancellationToken cancellationToken)
@@ -62,7 +62,7 @@ public class ExecutionModule
 
                 executionSequenceCid = await _persistence.Put(executionSequence);
 
-                await _output.Writer.WriteAsync(new ActionExecuted(executionSequenceCid));
+                await _output.Writer.WriteAsync(new ActionExecution(executionSequenceCid));
             }
         }
     }

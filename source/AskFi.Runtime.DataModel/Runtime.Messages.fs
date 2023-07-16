@@ -25,8 +25,8 @@ type NewDecision = {
     DecisionSequenceHeadCid: ContentId
 }
 
-/// Represents the result of an action execution
-type ActionExecuted = {
+/// Represents the result of an action execution by a broker
+type ActionExecution = {
     /// Cid to the newly created execution sequence head (DataModel.ExecutionSequenceHead)
     ExecutionSequenceHeadCid: ContentId
 }
