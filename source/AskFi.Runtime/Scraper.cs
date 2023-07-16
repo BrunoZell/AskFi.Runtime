@@ -29,7 +29,7 @@ public class Scraper
         IPlatformMessaging messaging)
     {
         var observation = new ObserverModule(observers, persistence);
-        var perspectiveModule = new PerspectiveModule(persistence, observation.Output);
+        var perspectiveModule = new PerspectiveMergeModule(persistence, observation.Output);
         var output = new EmitOutput<NewPerspective>(messaging, perspectiveModule.Output);
 
         return new(observation, perspectiveModule, output);

@@ -21,10 +21,10 @@ type CapturedObservation = {
     Observation: ContentId // Sdk.Observation<'Percept>
 }
 
-/// All captured obervations within an observer group are sequenced into
+/// All captured observations within an observer group are sequenced into
 /// an observation sequence. Isolated observation sequences are a form of
 /// entry point for new information into the system. Cids to such sequences
-/// are passed arround to share information.
+/// are passed around to share information.
 type ObservationSequenceHead =
     | Beginning
     | Happening of Node:ObservationSequenceNode

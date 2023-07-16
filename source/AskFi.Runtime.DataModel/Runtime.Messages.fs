@@ -1,15 +1,11 @@
 namespace AskFi.Runtime.Messages
 
-open System
 open AskFi.Runtime.Persistence
 
 /// Message from Observer Module emitted on each new received observation
 type NewObservation = {
-    /// The 'Percept from IObserver<'Percept> to full parse the DataModel.LinkedObservation<'Percept>
-    PerceptType: Type
-
-    /// Cid to the newly produced LinkedObservation<'Percept>
-    LinkedObservationCid: ContentId
+    /// Cid to the newly produced CapturedObservation
+    CapturedObservationCid: ContentId
 }
 
 /// Represents a new perspective
