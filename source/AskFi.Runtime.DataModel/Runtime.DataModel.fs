@@ -119,8 +119,11 @@ type KnowledgeBase = {
 // ####  CONTEXT  ####
 // ###################
 //
+// Producing context sequences is the act of sequencing observations one by one across multiple observation sequences.
 // Sequencer produce context sequences, with each context adding one and only one new observation (or act) to the sequence per node.
-// Different implementations may sequence on different timestamps (observer or sequencer) or handle late arriving data differently (drop or rewind, up to a threshold)
+// Different sequencer implementations may:
+// - sequence on different timestamps (observer or sequencer), or
+// - handle late arriving data differently (drop or rewind, up to a threshold)
 
 type ContextSequenceHead =
     | Identity of KnowledgeBase:ContentId // Cid of KnowledgeBase
@@ -143,36 +146,25 @@ type ContextHistory = {
     Dropped: ContentId list // ContextSequence list
 }
 
-/// Decision sequence for strategy executions along a perspective sequence, where
-/// decisions are made from now into the past.
-type BacktestEvaluationHead =
-    | Start of BacktestEvaluationStart
-    | Initiative of BacktestEvaluationNode
-and BacktestEvaluationStart = {
-    /// Links to first and latest perspective the backtest ran on.
-    LastPerspective: ContentId // PerspectiveSequenceHead
+/// Decision sequence for strategy executions along a context sequence, where
+/// decisions are made from now into the future using the same strategy.
+/// It is produced by the runtime modules 'Live Strategy' and 'Backtester',
+/// with decision sequences of the live strategy module possibly being routed to an according 'Broker Group'.
+type DecisionSequenceHead =
+    | Start of DecisionSequenceStart
+    | Decision of DecisionSequenceNode
+and DecisionSequenceStart = {
+    /// References the strategy to be used for every decision to be a valid decision sequence.
+    Strategy:ContentId // Sdk.Strategy
+
+    /// The first context the strategy should produce decisions on, with all later contexts being
+    /// part of the same decision sequence for this to be a valid decision sequence.
+    FirstContext:ContentId // ContextSequenceHead
 }
-and BacktestEvaluationNode = {
+and DecisionSequenceNode = {
     /// Links previous backtest evaluation.
     Previous: ContentId // BacktestEvaluationStart
 
     /// What actions have been decided on by the backtested strategy.
-    ActionSet: ContentId // ActionSet
-}
-
-/// Decision sequence for strategy executions on a live observation stream, where
-/// decisions are made from now into the future.
-type LiveEvaluationHead =
-    | Start of LiveEvaluationStart
-    | Initiative of LiveEvaluationNode
-and LiveEvaluationStart = {
-    /// Links to first and earliest perspective this live execution ran on.
-    FirstPerspective: ContentId // PerspectiveSequenceHead
-}
-and LiveEvaluationNode = {
-    /// Links previous backtest evaluation.
-    Previous: ContentId // LiveEvaluationHead
-
-    /// What actions have been decided on by the executing strategy.
     ActionSet: ContentId // ActionSet
 }
