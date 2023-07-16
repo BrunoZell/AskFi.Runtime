@@ -1,24 +1,25 @@
 using System.Threading.Channels;
 using AskFi.Runtime.Messages;
+using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
 using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Modules.Perspective;
 
 /// <summary>
-/// Deduplicates NewObservationPool messages by only emitting those that added information to the locally ever growing pool.
+/// Turns NewObservation messages into NewObservationPool messages given that they indeed contained new information.
 /// </summary>
-internal class ObservationPoolDeduplicatorModule
+internal class ObservationIntegrationModule
 {
-    private readonly ChannelReader<NewObservationPool> _input;
+    private readonly ChannelReader<NewObservation> _input;
     private readonly Channel<NewObservationPool> _output;
     private readonly IPlatformPersistence _persistence;
 
     public ChannelReader<NewObservationPool> Output => _output.Reader;
 
-    public ObservationPoolDeduplicatorModule(
+    public ObservationIntegrationModule(
         IPlatformPersistence persistence,
-        ChannelReader<NewObservationPool> input)
+        ChannelReader<NewObservation> input)
     {
         _output = Channel.CreateUnbounded<NewObservationPool>();
         _persistence = persistence;
@@ -31,9 +32,15 @@ internal class ObservationPoolDeduplicatorModule
         var localHeaviestObservationPool = new ObservationPool(includedObservationSequences: null);
         var localHeaviestObservationPoolCid = _persistence.Cid(localHeaviestObservationPool);
 
-        await foreach (var pool in _input.ReadAllAsync(cancellationToken)) {
+        await foreach (var observation in _input.ReadAllAsync(cancellationToken)) {
+            // Transform incoming observation into observation pool to merge
+            var incomingObservationPool = new ObservationPool(
+                includedObservationSequences: new Microsoft.FSharp.Collections.FSharpMap<ContentId, ContentId>(
+                    elements: new[] { new Tuple<ContentId, ContentId>(
+                        item1: observation.ObservationSequenceIdentityCid,
+                        item2: observation.ObservationSequenceHeadCid) }));
+
             // Merge incoming pool with local pool, creating a new heaviest local pool
-            var incomingObservationPool = await _persistence.Get<ObservationPool>(pool.ObservationPool);
             var mergedObservationPool = await ObservationPoolJoin.Add(localHeaviestObservationPool, incomingObservationPool, _persistence);
             var mergedObservationPoolCid = _persistence.Cid(mergedObservationPool);
 

@@ -9,12 +9,12 @@ namespace AskFi.Runtime;
 public class Sequencer
 {
     private readonly StreamInput<NewObservationPool> _input;
-    private readonly ObservationPoolDeduplicatorModule _perspectiveMergeModule;
+    private readonly ObservationDeduplicationModule _perspectiveMergeModule;
     private readonly EmitOutput<NewObservationPool> _output;
 
     private Sequencer(
         StreamInput<NewObservationPool> input,
-        ObservationPoolDeduplicatorModule perspectiveMergeModule,
+        ObservationDeduplicationModule perspectiveMergeModule,
         EmitOutput<NewObservationPool> output)
     {
         _input = input;

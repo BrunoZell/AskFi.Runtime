@@ -11,7 +11,7 @@ namespace AskFi.Runtime.Modules.Observation;
 internal sealed class NewInternalObservation
 {
     /// <summary>
-    /// Obserer instance
+    /// Observer instance
     /// </summary>
     public required object ObserverInstance { get; init; } // IObserver<P> instance
 
