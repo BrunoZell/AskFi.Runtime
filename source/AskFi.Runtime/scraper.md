@@ -1,4 +1,4 @@
-# Runtime Mode: Scraper
+# Runtime Configuration: Scraper
 
 ## Processing Pipeline
 

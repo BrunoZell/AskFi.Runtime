@@ -1,6 +1,6 @@
-# Runtime Mode: Live Strategy
+# Runtime Configuration: Live Strategy
 
-Run custom strategies in the form of `type Decide = Reflection -> Perspective -> Decision` against newest versions of the observation pool.
+Run custom strategies in the form of `type Decide = Reflection -> Context -> Decision` against newest versions of the observation pool.
 
 ## Processing Pipeline
 

@@ -1,8 +1,8 @@
-# Runtime Mode: Observation Gossip
+# Runtime Configuration: Observation Gossip
+
+Actively listening to new observations to further gossip a more informative observation pool
 
 ## Processing Pipeline
-
-### Active onboarding of new observations
 
 1. Input `NewObservation`
 2. Observation Integration Module
