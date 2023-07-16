@@ -8,23 +8,26 @@ using static AskFi.Sdk;
 
 namespace AskFi.Runtime;
 
-public class Evaluator
+public class LiveStrategy
 {
     private readonly StreamInput<NewObservationPool> _input;
+    private readonly ObservationDeduplicationModule _observationDeduplication;
     private readonly StrategyModule _strategyModule;
     private readonly EmitOutput<NewDecision> _output;
 
-    private Evaluator(
+    private LiveStrategy(
         StreamInput<NewObservationPool> input,
+        ObservationDeduplicationModule observationDeduplication,
         StrategyModule strategyModule,
         EmitOutput<NewDecision> output)
     {
         _input = input;
+        _observationDeduplication = observationDeduplication;
         _strategyModule = strategyModule;
         _output = output;
     }
 
-    public static Evaluator Build(
+    public static LiveStrategy Build(
         Func<Reflection, Context, Decision> strategy,
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
@@ -34,15 +37,16 @@ public class Evaluator
         var strategyModule = new StrategyModule(strategy, persistence, observationDeduplicator.Output);
         var output = new EmitOutput<NewDecision>(messaging, strategyModule.Output);
 
-        return new(input, strategyModule, output);
+        return new(input, observationDeduplicator, strategyModule, output);
     }
 
     public async Task Run(CancellationToken shutdown)
     {
         var inputTask = _input.Run(shutdown);
+        var observationTask = _observationDeduplication.Run(shutdown);
         var strategyTask = _strategyModule.Run(shutdown);
         var outputTask = _output.Run();
 
-        await Task.WhenAll(inputTask, strategyTask, outputTask);
+        await Task.WhenAll(inputTask, observationTask, strategyTask, outputTask);
     }
 }

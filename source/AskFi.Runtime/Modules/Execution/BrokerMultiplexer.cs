@@ -62,7 +62,7 @@ internal class BrokerMultiplexer
             // Execute action using user-provided IBroker-instance.
             await broker.Execute(action);
 
-            // Todo: pass user defined execition trace
+            // Todo: pass user defined execution trace
             var trace = ActionExecutionTrace.NewSuccess(Microsoft.FSharp.Core.FSharpOption<byte[]>.None);
             var completionTimestamp = DateTime.UtcNow;
             return new ActionExecutionResult(trace, initiationTimestamp, completionTimestamp);

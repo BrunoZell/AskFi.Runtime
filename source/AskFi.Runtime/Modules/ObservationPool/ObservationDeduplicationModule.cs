@@ -28,12 +28,12 @@ internal class ObservationDeduplicationModule
     public async Task Run(CancellationToken cancellationToken)
     {
         // Local pool starts out with an empty pool
-        var localHeaviestObservationPool = new ObservationPool(includedObservationSequences: null);
+        var localHeaviestObservationPool = new DataModel.ObservationPool(includedObservationSequences: null);
         var localHeaviestObservationPoolCid = _persistence.Cid(localHeaviestObservationPool);
 
         await foreach (var pool in _input.ReadAllAsync(cancellationToken)) {
             // Merge incoming pool with local pool, creating a new heaviest local pool
-            var incomingObservationPool = await _persistence.Get<ObservationPool>(pool.ObservationPool);
+            var incomingObservationPool = await _persistence.Get<DataModel.ObservationPool>(pool.ObservationPool);
             var mergedObservationPool = await ObservationPoolJoin.Add(localHeaviestObservationPool, incomingObservationPool, _persistence);
             var mergedObservationPoolCid = _persistence.Cid(mergedObservationPool);
 

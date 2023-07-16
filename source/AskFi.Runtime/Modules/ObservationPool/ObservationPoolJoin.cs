@@ -27,12 +27,12 @@ internal class ObservationPoolJoin
     private readonly ImmutableHashSet<ContentId> _allIncludedCapturedObservations;
 
     /// <summary>
-    /// Maps every recorded discrete timestamp to the <see cref="ContentId"/> of the <see cref="ObservationPool.IncludedObservationSequences"/> with
+    /// Maps every recorded discrete timestamp to the <see cref="ContentId"/> of the <see cref="DataModel.ObservationPool.IncludedObservationSequences"/> with
     /// the latest observation recorded at that timestamp.
     /// </summary>
     private readonly ImmutableSortedDictionary<DateTime, ContentId> _absouteTimestampMap;
 
-    public static async ValueTask<ObservationPool> Add(ObservationPool a, ObservationPool b, IPlatformPersistence persistence)
+    public static async ValueTask<ObservationPool> Add(ObservationPool a, DataModel.ObservationPool b, IPlatformPersistence persistence)
     {
         // 1: Find first common ancestor (which is the point where all previous captured observations are exactly the same)
 

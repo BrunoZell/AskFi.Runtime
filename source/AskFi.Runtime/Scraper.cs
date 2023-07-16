@@ -9,12 +9,12 @@ namespace AskFi.Runtime;
 public class Scraper
 {
     private readonly ObserverModule _observerModule;
-    private readonly PerspectiveModule _perspectiveModule;
+    private readonly ObservationIntegrationModule _perspectiveModule;
     private readonly EmitOutput<NewObservationPool> _output;
 
     private Scraper(
         ObserverModule observerModule,
-        PerspectiveModule perspectiveModule,
+        ObservationIntegrationModule perspectiveModule,
         EmitOutput<NewObservationPool> output)
     {
         _observerModule = observerModule;
@@ -29,10 +29,10 @@ public class Scraper
         IPlatformMessaging messaging)
     {
         var observation = new ObserverModule(observers, persistence);
-        var perspectiveModule = new PerspectiveMergeModule(persistence, observation.Output);
-        var output = new EmitOutput<NewObservationPool>(messaging, perspectiveModule.Output);
+        var observationIntegration = new ObservationIntegrationModule(persistence, observation.Output);
+        var output = new EmitOutput<NewObservationPool>(messaging, observationIntegration.Output);
 
-        return new(observation, perspectiveModule, output);
+        return new(observation, observationIntegration, output);
     }
 
     public async Task Run(CancellationToken shutdown)

@@ -6,13 +6,13 @@ using AskFi.Runtime.Platform;
 
 namespace AskFi.Runtime;
 
-public class Sequencer
+public class ObservationGossip
 {
     private readonly StreamInput<NewObservationPool> _input;
     private readonly ObservationDeduplicationModule _perspectiveMergeModule;
     private readonly EmitOutput<NewObservationPool> _output;
 
-    private Sequencer(
+    private ObservationGossip(
         StreamInput<NewObservationPool> input,
         ObservationDeduplicationModule perspectiveMergeModule,
         EmitOutput<NewObservationPool> output)
@@ -22,15 +22,15 @@ public class Sequencer
         _output = output;
     }
 
-    public static Sequencer Build(
+    public static ObservationGossip Build(
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
         var input = new StreamInput<NewObservationPool>(messaging);
-        var perspectiveMergeModule = new ObservationPoolModule(persistence, input.Output);
-        var output = new EmitOutput<NewObservationPool>(messaging, perspectiveMergeModule.Output);
+        var observationDeduplication = new ObservationDeduplicationModule(persistence, input.Output);
+        var output = new EmitOutput<NewObservationPool>(messaging, observationDeduplication.Output);
 
-        return new(input, perspectiveMergeModule, output);
+        return new(input, observationDeduplication, output);
     }
 
     public async Task Run(CancellationToken shutdown)

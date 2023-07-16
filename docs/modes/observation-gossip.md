@@ -1,9 +1,11 @@
-# Observation Deduplication Module
+# Runtime Mode: Observation Gossip
 
 ## Processing Pipeline
 
-1. Input `NewObservationPool`
-2. Observation Pool Merge
+### Active onboarding of new observations
+
+1. Input `NewObservation`
+2. Observation Integration Module
 3. Output `NewObservationPool`
 
 ## Message Usage
