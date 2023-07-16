@@ -1,6 +1,7 @@
 using AskFi.Runtime.Messages;
 using AskFi.Runtime.Modules.Input;
 using AskFi.Runtime.Modules.Output;
+using AskFi.Runtime.Modules.Perspective;
 using AskFi.Runtime.Modules.Strategy;
 using AskFi.Runtime.Platform;
 using static AskFi.Sdk;
@@ -24,12 +25,13 @@ public class Evaluator
     }
 
     public static Evaluator Build(
-        Func<Reflection, Perspective, Decision> strategy,
+        Func<Reflection, Context, Decision> strategy,
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
         var input = new StreamInput<NewObservationPool>(messaging);
-        var strategyModule = new StrategyModule(strategy, persistence, input.Output);
+        var observationDeduplicator = new ObservationDeduplicationModule(persistence, input.Output);
+        var strategyModule = new StrategyModule(strategy, persistence, observationDeduplicator.Output);
         var output = new EmitOutput<NewDecision>(messaging, strategyModule.Output);
 
         return new(input, strategyModule, output);

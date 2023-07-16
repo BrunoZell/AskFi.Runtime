@@ -1,6 +1,5 @@
 using System.Threading.Channels;
 using AskFi.Runtime.Messages;
-using AskFi.Runtime.Modules.Perspective;
 using AskFi.Runtime.Platform;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
@@ -9,7 +8,7 @@ namespace AskFi.Runtime.Modules.Strategy;
 
 internal class StrategyModule
 {
-    private readonly Func<Reflection, Sdk.Perspective, Decision> _strategy;
+    private readonly Func<Reflection, Context, Decision> _strategy;
     private readonly IPlatformPersistence _persistence;
     private readonly ChannelReader<NewObservationPool> _input;
     private readonly Channel<NewDecision> _output;
@@ -17,7 +16,7 @@ internal class StrategyModule
     public ChannelReader<NewDecision> Output => _output;
 
     public StrategyModule(
-        Func<Reflection, Sdk.Perspective, Decision> strategy,
+        Func<Reflection, Context, Decision> strategy,
         IPlatformPersistence persistence,
         ChannelReader<NewObservationPool> input)
     {
@@ -33,9 +32,9 @@ internal class StrategyModule
         var decisionSequenceCid = await _persistence.Put(decisionSequence);
 
         await foreach (var pool in _input.ReadAllAsync(sessionShutdown)) {
-            var perspective = new Sdk.Perspective(query: null);
+            var context = new Sdk.Context(query: null);
             var reflection = new Reflection(query: null);
-            var decision = _strategy(reflection, perspective); // evaluating a strategy runs all required queries
+            var decision = _strategy(reflection, context); // evaluating a strategy runs all required queries
 
             if (decision is not Decision.Initiate initiate) {
                 // Do no more accounting if the decision is to do nothing.
