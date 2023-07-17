@@ -21,9 +21,9 @@ internal class BrokerMultiplexer
         _persistence = persistence;
     }
 
-    public bool TryStartActionExecution(DataModel.ActionInitiation initiation, [NotNullWhen(true)] out Task<ActionExecutionResult>? actionExecution)
+    public bool TryStartActionExecution(DataModel.Action action, [NotNullWhen(true)] out Task<ActionExecutionResult>? actionExecution)
     {
-        if (!_brokers.TryGetValue(initiation.ActionType, out var broker)) {
+        if (!_brokers.TryGetValue(action.ActionType, out var broker)) {
             // No broker available that can handle this type of action
             actionExecution = null;
             return false;
@@ -32,8 +32,8 @@ internal class BrokerMultiplexer
         // Uses reflection over dynamic to support brokers that implement multiple IBroker<A> interfaces.
         // Perf: Precompile this delegate once at startup.
         var execute = typeof(BrokerMultiplexer).GetMethod(nameof(ExecuteAction), BindingFlags.Static | BindingFlags.NonPublic)!;
-        var executeA = execute.MakeGenericMethod(initiation.ActionType);
-        var invoke = executeA.Invoke(obj: null, new object[] { broker, initiation.ActionCid, _persistence });
+        var executeA = execute.MakeGenericMethod(action.ActionType);
+        var invoke = executeA.Invoke(obj: null, new object[] { broker, action.ActionCid, _persistence });
 
         if (invoke is Task<ActionExecutionResult> i) {
             actionExecution = i;
