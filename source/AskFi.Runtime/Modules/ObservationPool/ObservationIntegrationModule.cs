@@ -38,8 +38,8 @@ internal class ObservationIntegrationModule
             var incomingObservationPool = new KnowledgeBase(
                 observations: new FSharpMap<ContentId, FSharpList<ContentId>>(
                     elements: new[] { new Tuple<ContentId, FSharpList<ContentId>>(
-                        item1: observation.ObservationSequenceIdentityCid,
-                        item2: new FSharpList<ContentId>(observation.ObservationSequenceHeadCid, FSharpList<ContentId>.Empty))}),
+                        item1: observation.Identity,
+                        item2: new FSharpList<ContentId>(observation.Head, FSharpList<ContentId>.Empty)) }),
                 actions: null);
 
             // Merge incoming pool with local pool, creating a new heaviest local pool

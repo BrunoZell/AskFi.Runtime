@@ -6,10 +6,10 @@ open AskFi.Runtime.Persistence
 /// hopefully appended to its previous version of the single observation sequence it produces.
 type NewObservation = {
     /// Cid to the original ObservationSequenceHead.Identity of the newly produced observation sequence head.
-    ObservationSequenceIdentityCid: ContentId
+    Identity: ContentId
 
     /// Cid to the newly produced ObservationSequenceHead.Observation
-    ObservationSequenceHeadCid: ContentId
+    Head: ContentId
 }
 
 /// Nodes send this message to gossip the observation pool.
