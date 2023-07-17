@@ -89,8 +89,11 @@ and ActionSequenceNode = {
     /// Links previous decision.
     Previous: ContentId // ActionSequenceHead
 
-    /// What actions have been executed.
-    Executed: ActionSet
+    /// What action has been executed.
+    Executed: Action
+
+    /// Holds timestamps and information obtained through the broker.
+    Result: ActionExecutionResult
 }
 
 // ##################
@@ -125,15 +128,19 @@ type KnowledgeBase = {
 // - sequence on different timestamps (observer or sequencer), or
 // - handle late arriving data differently (drop or rewind, up to a threshold)
 
+type Happening =
+    | Observation of CapturedObservation
+    | Action of ActionSequenceHead
+
 type ContextSequenceHead =
-    | Identity of KnowledgeBase:ContentId // Cid of KnowledgeBase
+    | Identity of Nonce:uint64
     | Context of Node:ContextSequenceNode
 and ContextSequenceNode = {
     /// Links previous context sequence head
     Previous: ContentId // ContextSequenceHead
 
     /// What new observation got appended to this context sequence.
-    Executed: ActionSet
+    Memory: ContentId // Happening
 }
 
 /// Output type produced by a wrapped sequencer, referencing all context sequence heads it every produced,
