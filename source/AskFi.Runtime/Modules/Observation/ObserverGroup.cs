@@ -1,6 +1,5 @@
 using System.Threading.Channels;
 using AskFi.Runtime.Messages;
-using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
 using static AskFi.Runtime.DataModel;
 
@@ -19,7 +18,7 @@ internal sealed class ObserverGroup : IAsyncDisposable
     private readonly ChannelWriter<NewObservation> _output;
     private readonly IPlatformPersistence _persistence;
     private readonly CancellationTokenSource _cancellation;
-    private readonly Task _backgroundTask;
+    private readonly Task _observationSequencing;
 
     private ObserverGroup(
         IReadOnlyCollection<ObserverInstance> observers,
@@ -33,7 +32,7 @@ internal sealed class ObserverGroup : IAsyncDisposable
         _output = output;
         _persistence = persistence;
         _cancellation = cancellation;
-        _backgroundTask = LinkObservations();
+        _observationSequencing = SequenceObservations();
     }
 
     public static ObserverGroup StartNew(
@@ -65,30 +64,28 @@ internal sealed class ObserverGroup : IAsyncDisposable
     }
 
     /// <summary>
-    /// Long-running background task that reads all pooled new observations and builds <see cref="LinkedObservation"/> for each one.
-    /// This introduces a relative ordering in time between observations of the same ObserverGroup.
+    /// Long-running background task that reads all new observations pooled accross all IObserver instances and
+    /// sequences them into a <see cref="ObservationSequenceHead"/>.
+    /// This sequence introduces a relative ordering in time between observations of the same Observer Group.
     /// </summary>
-    private async Task LinkObservations()
+    private async Task SequenceObservations()
     {
-        var latestObservations = new Dictionary<object, ContentId>(ReferenceEqualityComparer.Instance);
+        var observationSequence = ObservationSequenceHead.NewIdentity(nonce: 0ul);
+        var observationSequenceIdentity = _persistence.Cid(observationSequence);
+        var observationSequenceCid = observationSequenceIdentity;
 
         // Sequentially receives all observations from IObserver-instances in this group as they happen.
         await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync(_cancellation.Token)) {
-            latestObservations[newObservation.ObserverInstance] = newObservation.CapturedObservationCid;
-
-            var relativeTimeLinks = latestObservations
-                .Where(kvp => !ReferenceEquals(kvp.Key, newObservation.ObserverInstance))
-                .Select(o => new RelativeTimeLink(o.Value))
-                .ToArray();
-
-            var linkedObservation = new LinkedObservation(newObservation.CapturedObservationCid, relativeTimeLinks);
+            observationSequence = ObservationSequenceHead.NewObservation(new ObservationSequenceNode(
+                previous: observationSequenceCid,
+                observation: newObservation.CapturedObservationCid));
 
             // Perf: Generate CID localy and upload in the background
-            var linkedObservationCid = await _persistence.Put(linkedObservation);
+            observationSequenceCid = await _persistence.Put(observationSequence);
 
             await _output.WriteAsync(new NewObservation(
-                newObservation.PerceptType,
-                linkedObservationCid));
+                identity: observationSequenceIdentity,
+                head: observationSequenceCid));
         }
     }
 
@@ -98,7 +95,7 @@ internal sealed class ObserverGroup : IAsyncDisposable
 
         // To throw and observe possible exceptions.
         await Task.WhenAll(
-            _observers.Select(o => o.DisposeAsync().AsTask()).Append(_backgroundTask).ToArray());
+            _observers.Select(o => o.DisposeAsync().AsTask()).Append(_observationSequencing).ToArray());
 
         _cancellation.Dispose();
     }

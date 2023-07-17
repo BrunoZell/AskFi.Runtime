@@ -82,12 +82,14 @@ internal sealed class ObserverInstance : IAsyncDisposable
 
         try {
             await foreach (var observation in observer.Observations.WithCancellation(cancellationToken)) {
-                var timestamp = DateTime.UtcNow;
-
                 // Capture timestamp and persist observation
-                var capturedObservation = new CapturedObservation<TPercept>(timestamp, observation);
+                var timestamp = DateTime.UtcNow;
+                var observationCid = await persistence.Put(observation);
+                var capturedObservation = new CapturedObservation(
+                    at: timestamp,
+                    perceptType: typeof(TPercept),
+                    observation: observationCid);
 
-                // Perf: Generate CID localy and upload in the background
                 var capturedObservationCid = await persistence.Put(capturedObservation);
 
                 await observationSink.WriteAsync(new() {

@@ -5,15 +5,15 @@ using AskFi.Runtime.Modules.Output;
 using AskFi.Runtime.Platform;
 
 namespace AskFi.Runtime;
-public class Executor
+public class BrokerGroup
 {
     private readonly StreamInput<NewDecision> _input;
-    private readonly ExecutionModule _executionModule;
+    private readonly BrokerModule _executionModule;
     private readonly EmitOutput<ActionExecuted> _output;
 
-    private Executor(
+    private BrokerGroup(
         StreamInput<NewDecision> input,
-        ExecutionModule executionModule,
+        BrokerModule executionModule,
         EmitOutput<ActionExecuted> output)
     {
         _input = input;
@@ -21,13 +21,13 @@ public class Executor
         _output = output;
     }
 
-    public static Executor Build(
+    public static BrokerGroup Build(
         IReadOnlyDictionary<Type, object> broker,
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
         var input = new StreamInput<NewDecision>(messaging);
-        var executionModule = new ExecutionModule(broker, persistence, input.Output);
+        var executionModule = new BrokerModule(broker, persistence, input.Output);
         var output = new EmitOutput<ActionExecuted>(messaging, executionModule.Output);
 
         return new(input, executionModule, output);

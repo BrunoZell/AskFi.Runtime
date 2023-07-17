@@ -1,83 +1,67 @@
 module AskFi.Runtime.DataModel
 
-open AskFi
 open AskFi.Runtime.Persistence
 open System
 
-// ############################
-// #### OBSERVATION MODULE ####
-// ############################
+// ######################
+// #### OBSERVATIONS ####
+// ######################
+//
+// Observations are the main entry point of data flowing into the system.
+// Keeping a handle on created observation sequences therefore is important
+// if the data should not get lost.
 
-/// Generated immediately after an IObserver emitted a new observation.
-type CapturedObservation<'Percept> = {
+/// Generated immediately after an IObserver emitted a new observation grouping
+/// the observation with the latest local timestamp as of the runtime clock.
+type CapturedObservation = {
     /// Absolute timestamp of when this observation was recorded.
     /// As of runtime clock.
     At: DateTime
 
+    /// The 'Percept from Observation<'Percept> (type of the originating observer instance)
+    PerceptType: Type
+
     /// All percepts that appeared at this instant, as emitted by an IObserver<'Percept> instance.
-    Observation: Sdk.Observation<'Percept>
+    Observation: ContentId // Sdk.Observation<'Percept>
 }
 
-/// Generated sequentially within an Observer Module to add relative time relations.
-type LinkedObservation = {
-    Observation: ContentId // CapturedObservation<'Percept>
+/// All captured observations within an observer group are sequenced into
+/// an observation sequence. Isolated observation sequences are a form of
+/// entry point for new information into the system. Cids to such sequences
+/// are passed around to share information.
+type ObservationSequenceHead =
+    | Identity of Nonce:uint64
+    | Observation of Node:ObservationSequenceNode
+and ObservationSequenceNode = {
+    /// Links previous ObservationSequenceHead to form a temporal order.
+    Previous: ContentId // ObservationSequenceHead
 
-    /// Introduces relative ordering between CapturedObservations within an Observer Module
-    Links: RelativeTimeLink array
-}
-and RelativeTimeLink = {
-    /// Links to a LinkedObservation that happened before the link-owning observation.
-    Before: ContentId
-}
-
-// ##############################
-// ####  PERSPECTIVE MODULE  ####
-// ##############################
-
-/// A set of LinkedObservations are then merged into a Perspective Sequence.
-/// This defines a temporal ordering between observations from different IObserver-instances and Observer Modules.
-type PerspectiveSequenceHead =
-    | Beginning
-    | Happening of Node:PerspectiveSequenceNode
-and PerspectiveSequenceNode = {
-    /// Links previous PerspectiveSequenceHead to form a temporal order.
-    Previous: ContentId // PerspectiveSequenceHead
-
-    /// Cid to the then latest LinkedObservation that caused this update in perspective.
-    LinkedObservation: ContentId // LinkedObservation
+    /// Cid to the then latest CapturedObservation that caused this update in perspective.
+    Observation: ContentId // CapturedObservation
 }
 
-// ###########################
-// ####  STRATEGY MODULE  ####
-// ###########################
+// #####################
+// ####  EXECUTION  ####
+// #####################
+//
+// Action execution traces are the other entry point of data flowing into the system,
+// which include the information gained from executing certain actions.
+// Keeping a handle on created action execution sequences therefore is important
+// if the data should not get lost.
 
-and ActionInitiation = {
-    /// The 'Action from IBroker<'Action> (type of the originating observer instance)
-    ActionType: Type
-    /// Cid to the action information. Has type of ActionType.
-    ActionCid: ContentId
-}
 
 type ActionSet = {
     /// All actions the strategy has decided to initiate.
-    /// Those are keyed by 'ActionId'.
-    Initiations: ActionInitiation array
+    Actions: Action array
 }
+and Action = {
+    /// 'Action to route to according IBroker<'Action>.
+    /// This type is taken from what the strategy emitted in its decision.
+    ActionType: Type
 
-type DecisionSequenceHead =
-    | Start
-    | Initiative of Node:DecisionSequenceNode
-and DecisionSequenceNode = {
-    /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
-    Previous: ContentId // DecisionSequenceHead
-
-    /// What actions have been decided on.
-    ActionSet: ContentId // ActionSet
+    /// Cid to the action information. Has type of ActionType.
+    ActionCid: ContentId
 }
-
-// ############################
-// ####  EXECUTION MODULE  ####
-// ############################
 
 type ActionExecutionTrace =
     /// Data emitted by the IBroker action execution. Could include an execution id, transaction, or validity proofs.
@@ -88,7 +72,7 @@ type ActionExecutionTrace =
 type ActionExecutionResult = {
     /// Trace output from broker.
     Trace: ActionExecutionTrace
-    
+
     /// When the used IBroker implementation started executing.
     InitiationTimestamp: DateTime
 
@@ -96,13 +80,104 @@ type ActionExecutionResult = {
     CompletionTimestamp: DateTime
 }
 
-type ExecutionSequenceHead =
-    | Start
-    | Execution of Node:ExecutionSequenceNode
-and ExecutionSequenceNode = {
-    /// Links previous decision. This sequencing creates a temporal order between all decisions in this session.
-    Previous: ContentId // ExecutionSequenceHead
-    
+/// An action sequence is produced by a Broker Group, which forms the second type
+/// of data entry into the system, holding information we got from executing actions.
+type ActionSequenceHead =
+    | Identity of Nonce:uint64
+    | Action of Node:ActionSequenceNode
+and ActionSequenceNode = {
+    /// Links previous decision.
+    Previous: ContentId // ActionSequenceHead
+
     /// What action has been executed.
-    Action: ActionInitiation
+    Executed: Action
+
+    /// Holds timestamps and information obtained through the broker.
+    Result: ActionExecutionResult
+}
+
+// ##################
+// ####  MEMORY  ####
+// ##################
+
+/// With observation sequences and execution sequences being the root data entry point of all external data
+/// flowing into the system, a knowledge base instance references a specific set of those sequences.
+/// When two observation pools are merged, their greatest sum is taken, i.e. that with most information,
+/// what include all information from both.
+/// Each sequence is identified by its very first root node, and is then mapped to all latest known sequence heads sharing the same first node.
+/// If all producing observers and brokers where honest and bug free, then there always would be one latest version. However, in case there are
+/// multiple competing versions for the same sequence head, all will be referenced by this data structure to not loose data.
+/// This is fine in a permissioned environment.
+type KnowledgeBase = {
+    /// Maps ObservationSequenceHead.Identity as the observation sequence id
+    /// to the latest known ObservationSequenceHead.Observation
+    Observations: Map<ContentId, ContentId list> // Map<ObservationSequenceHead, ObservationSequenceHead list>
+    
+    /// Maps ActionSequenceHead.Identity as the observation sequence id
+    /// to the latest known ActionSequenceHead.Action
+    Actions: Map<ContentId, ContentId list> // Map<ActionSequenceHead, ActionSequenceHead list>
+}
+
+// ###################
+// ####  CONTEXT  ####
+// ###################
+//
+// Producing context sequences is the act of sequencing observations one by one across multiple observation sequences.
+// Sequencer produce context sequences, with each context adding one and only one new observation (or act) to the sequence per node.
+// Different sequencer implementations may:
+// - sequence on different timestamps (observer or sequencer), or
+// - handle late arriving data differently (drop or rewind, up to a threshold)
+
+type Happening =
+    | Observation of CapturedObservation
+    | Action of ActionSequenceHead
+
+type ContextSequenceHead =
+    | Identity of Nonce:uint64
+    | Context of Node:ContextSequenceNode
+and ContextSequenceNode = {
+    /// Links previous context sequence head
+    Previous: ContentId // ContextSequenceHead
+
+    /// What new observation got appended to this context sequence.
+    Memory: ContentId // Happening
+}
+
+/// Output type produced by a wrapped sequencer, referencing all context sequence heads it every produced,
+/// even if there was a rewind and on top of another head got built.
+type ContextHistory = {
+    // The last published context sequence, with the most information of all references context sequences.
+    Latest: ContentId // ContextSequence
+
+    // Referencing all published context sequences that since have been abandoned due to a rewind from late arriving data.
+    Dropped: ContentId list // ContextSequence list
+}
+
+// ####################
+// ####  Strategy  ####
+// ####################
+//
+// Strategies are encoded roles that analyze information from a context sequence
+
+/// Decision sequence for strategy executions along a context sequence, where
+/// decisions are made from now into the future using the same strategy.
+/// It is produced by the runtime modules 'Live Strategy' and 'Backtester',
+/// with decision sequences of the live strategy module possibly being routed to an according 'Broker Group'.
+type DecisionSequenceHead =
+    | Start of DecisionSequenceStart
+    | Decision of DecisionSequenceNode
+and DecisionSequenceStart = {
+    /// References the strategy to be used for every decision to be a valid decision sequence.
+    Strategy:ContentId // Sdk.Strategy
+
+    /// The first context the strategy should produce decisions on, with all later contexts being
+    /// part of the same decision sequence for this to be a valid decision sequence.
+    FirstContext:ContentId // ContextSequenceHead
+}
+and DecisionSequenceNode = {
+    /// Links previous backtest evaluation.
+    Previous: ContentId // BacktestEvaluationStart
+
+    /// What actions have been decided on by the evaluated strategy.
+    ActionSet: ContentId // ActionSet
 }

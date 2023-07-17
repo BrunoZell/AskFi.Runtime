@@ -1,38 +1,45 @@
 namespace AskFi.Runtime.Messages
 
-open System
 open AskFi.Runtime.Persistence
 
-/// Message from Observer Module emitted on each new received observation
+/// Message from Observer Module emitted on each new received observation,
+/// hopefully appended to its previous version of the single observation sequence it produces.
 type NewObservation = {
-    /// The 'Percept from IObserver<'Percept> to full parse the DataModel.LinkedObservation<'Percept>
-    PerceptType: Type
+    /// Cid to the original ObservationSequenceHead.Identity of the newly produced observation sequence head.
+    Identity: ContentId
 
-    /// Cid to the newly produced LinkedObservation<'Percept>
-    LinkedObservationCid: ContentId
+    /// Cid to the newly produced ObservationSequenceHead.Observation
+    Head: ContentId
 }
 
-/// Represents a new perspective
-type NewPerspective = {
-    /// Cid to the newly created perspective sequence head (DataModel.PerspectiveSequenceHead)
-    PerspectiveSequenceHeadCid: ContentId
-
-    /// How many nodes before the one specified above have been
-    /// rewritten compared to the previously emitted new perspective
-    /// of the perspective module instance.
-    /// A rewrite depth of zero means only the latest node has been
-    /// added an no historic rewrites occured.
-    RewriteDepth: uint
+/// Nodes send this message to gossip the latest knowledge base.
+/// Knowledge base gossiper send them out when they received a NewObservation message.
+type NewKnowledgeBase = {
+    /// Cid to the latest heaviest knowledge base
+    KnowledeBase: ContentId // KnowledeBase
 }
 
 /// Message emitted from Strategy Module when a non-inaction decision has been made
 type NewDecision = {
+    /// Cid to the original DecisionSequenceHead.Identity of the newly produced decision sequence head.
+    Identity: ContentId
+
     /// Cid to the newly created decision sequence head (DataModel.DecisionSequenceHead)
-    DecisionSequenceHeadCid: ContentId
+    Head: ContentId
 }
 
-/// Represents the result of an action execution
+/// Represents the result of a completed action execution, successful or not, by a broker
 type ActionExecuted = {
-    /// Cid to the newly created execution sequence head (DataModel.ExecutionSequenceHead)
-    ExecutionSequenceHeadCid: ContentId
+    /// Cid to the original ActionSequenceHead.Identity of the newly produced action sequence head.
+    Identity: ContentId
+
+    /// Cid to the newly created action sequence head (DataModel.ActionSequenceHead)
+    Head: ContentId
+}
+
+/// Broadcasted by persistence system for other nodes to eagerly receive data referenced in other messages.
+type PersistencePut = {
+    Cid: ContentId
+    Content: byte array
+    TDatum: System.Type
 }

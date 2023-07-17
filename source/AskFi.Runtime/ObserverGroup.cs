@@ -6,16 +6,16 @@ using AskFi.Runtime.Platform;
 
 namespace AskFi.Runtime;
 
-public class Scraper
+public class ObserverGroup
 {
     private readonly ObserverModule _observerModule;
-    private readonly PerspectiveModule _perspectiveModule;
-    private readonly EmitOutput<NewPerspective> _output;
+    private readonly ObservationIntegrationModule _perspectiveModule;
+    private readonly EmitOutput<NewKnowledgeBase> _output;
 
-    private Scraper(
+    private ObserverGroup(
         ObserverModule observerModule,
-        PerspectiveModule perspectiveModule,
-        EmitOutput<NewPerspective> output)
+        ObservationIntegrationModule perspectiveModule,
+        EmitOutput<NewKnowledgeBase> output)
     {
         _observerModule = observerModule;
         _perspectiveModule = perspectiveModule;
@@ -23,16 +23,16 @@ public class Scraper
     }
 
     /// <param name="observers">TValue = <see cref="Sdk.IObserver{Percept}"/> (where Percept = .Key)</param>
-    public static Scraper Build(
+    public static ObserverGroup Build(
         IReadOnlyDictionary<Type, object> observers,
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
         var observation = new ObserverModule(observers, persistence);
-        var perspectiveModule = new PerspectiveModule(persistence, observation.Output);
-        var output = new EmitOutput<NewPerspective>(messaging, perspectiveModule.Output);
+        var observationIntegration = new ObservationIntegrationModule(persistence, observation.Output);
+        var output = new EmitOutput<NewKnowledgeBase>(messaging, observationIntegration.Output);
 
-        return new(observation, perspectiveModule, output);
+        return new(observation, observationIntegration, output);
     }
 
     public async Task Run(CancellationToken shutdown)
