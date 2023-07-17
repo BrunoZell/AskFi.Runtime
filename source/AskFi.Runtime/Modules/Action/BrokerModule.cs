@@ -4,16 +4,16 @@ using AskFi.Runtime.Platform;
 using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Modules.Execution;
-public class ExecutionModule
+public class BrokerModule
 {
     private readonly BrokerMultiplexer _brokerMultiplexer;
     private readonly IPlatformPersistence _persistence;
     private readonly ChannelReader<NewDecision> _input;
-    private readonly Channel<ActionExecution> _output;
+    private readonly Channel<ActionExecuted> _output;
 
-    public ChannelReader<ActionExecution> Output => _output.Reader;
+    public ChannelReader<ActionExecuted> Output => _output.Reader;
 
-    public ExecutionModule(
+    public BrokerModule(
         IReadOnlyDictionary<Type, object> brokers,
         IPlatformPersistence persistence,
         ChannelReader<NewDecision> input)
@@ -21,7 +21,7 @@ public class ExecutionModule
         _brokerMultiplexer = new BrokerMultiplexer(brokers, persistence);
         _persistence = persistence;
         _input = input;
-        _output = Channel.CreateUnbounded<ActionExecution>();
+        _output = Channel.CreateUnbounded<ActionExecuted>();
     }
 
     public async Task Run(CancellationToken cancellationToken)
@@ -65,7 +65,7 @@ public class ExecutionModule
 
                 actionSequenceCid = await _persistence.Put(actionSequence);
 
-                await _output.Writer.WriteAsync(new ActionExecution(
+                await _output.Writer.WriteAsync(new ActionExecuted(
                     identity: actionSequenceIdentity,
                     head: actionSequenceCid));
             }

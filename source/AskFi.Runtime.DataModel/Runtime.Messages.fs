@@ -28,8 +28,8 @@ type NewDecision = {
     Head: ContentId
 }
 
-/// Represents the result of an action execution by a broker
-type ActionExecution = {
+/// Represents the result of a completed action execution, successful or not, by a broker
+type ActionExecuted = {
     /// Cid to the original ActionSequenceHead.Identity of the newly produced action sequence head.
     Identity: ContentId
 

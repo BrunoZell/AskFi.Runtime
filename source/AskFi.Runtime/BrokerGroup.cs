@@ -8,13 +8,13 @@ namespace AskFi.Runtime;
 public class BrokerGroup
 {
     private readonly StreamInput<NewDecision> _input;
-    private readonly ExecutionModule _executionModule;
-    private readonly EmitOutput<ActionExecution> _output;
+    private readonly BrokerModule _executionModule;
+    private readonly EmitOutput<ActionExecuted> _output;
 
     private BrokerGroup(
         StreamInput<NewDecision> input,
-        ExecutionModule executionModule,
-        EmitOutput<ActionExecution> output)
+        BrokerModule executionModule,
+        EmitOutput<ActionExecuted> output)
     {
         _input = input;
         _executionModule = executionModule;
@@ -27,8 +27,8 @@ public class BrokerGroup
         IPlatformMessaging messaging)
     {
         var input = new StreamInput<NewDecision>(messaging);
-        var executionModule = new ExecutionModule(broker, persistence, input.Output);
-        var output = new EmitOutput<ActionExecution>(messaging, executionModule.Output);
+        var executionModule = new BrokerModule(broker, persistence, input.Output);
+        var output = new EmitOutput<ActionExecuted>(messaging, executionModule.Output);
 
         return new(input, executionModule, output);
     }

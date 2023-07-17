@@ -12,7 +12,7 @@ The _AskFi Runtime_ is a library of composable modules that:
 - [Observation Integration Module](Modules/ObservationPool/observation-integration.md)
 - [Observation Deduplication Module](Modules/ObservationPool/observation-deduplication.md)
 - [Strategy Module](Modules/Strategy/strategy.md)
-- [Execution Module](Modules/Execution/execution.md)
+- [Broker Module](Modules/Action/broker.md)
 
 ## Predefined Configurations
 
