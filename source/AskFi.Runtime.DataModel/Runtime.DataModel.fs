@@ -171,6 +171,6 @@ and DecisionSequenceNode = {
     /// Links previous backtest evaluation.
     Previous: ContentId // BacktestEvaluationStart
 
-    /// What actions have been decided on by the backtested strategy.
+    /// What actions have been decided on by the evaluated strategy.
     ActionSet: ContentId // ActionSet
 }
