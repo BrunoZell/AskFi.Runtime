@@ -28,22 +28,25 @@ internal class ObservationDeduplicationModule
     public async Task Run(CancellationToken cancellationToken)
     {
         // Local pool starts out with an empty pool
-        var localHeaviestObservationPool = new DataModel.ObservationPool(includedObservationSequences: null);
+        var localHeaviestObservationPool = new KnowledgeBase(
+            observations: null,
+            actions: null);
+
         var localHeaviestObservationPoolCid = _persistence.Cid(localHeaviestObservationPool);
 
         await foreach (var pool in _input.ReadAllAsync(cancellationToken)) {
             // Merge incoming pool with local pool, creating a new heaviest local pool
-            var incomingObservationPool = await _persistence.Get<DataModel.ObservationPool>(pool.ObservationPool);
-            var mergedObservationPool = await ObservationPoolJoin.Add(localHeaviestObservationPool, incomingObservationPool, _persistence);
-            var mergedObservationPoolCid = _persistence.Cid(mergedObservationPool);
+            var incomingKnowledgeBase = await _persistence.Get<KnowledgeBase>(pool.ObservationPool);
+            var mergedKnowledgeBase = await KnowledgeBaseMerge.Join(localHeaviestObservationPool, incomingKnowledgeBase, _persistence);
+            var mergedKnowledgeBaseCid = _persistence.Cid(mergedKnowledgeBase);
 
-            if (!mergedObservationPoolCid.Raw.Equals(localHeaviestObservationPoolCid.Raw)) {
+            if (!mergedKnowledgeBaseCid.Raw.Equals(localHeaviestObservationPoolCid.Raw)) {
                 // Found new information.
-                localHeaviestObservationPool = mergedObservationPool;
-                localHeaviestObservationPoolCid = mergedObservationPoolCid;
+                localHeaviestObservationPool = mergedKnowledgeBase;
+                localHeaviestObservationPoolCid = mergedKnowledgeBaseCid;
 
                 // Share it with others.
-                var newObservationPool = new NewObservationPool(mergedObservationPoolCid);
+                var newObservationPool = new NewObservationPool(mergedKnowledgeBaseCid);
                 await _output.Writer.WriteAsync(newObservationPool);
             }
         }

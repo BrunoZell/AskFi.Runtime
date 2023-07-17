@@ -1,9 +1,19 @@
-using System.Collections.Immutable;
-using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
 using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Modules.Perspective;
+
+#if !KNOWLEDGE_BASE
+
+public static class KnowledgeBaseMerge
+{
+    public static ValueTask<KnowledgeBase> Join(KnowledgeBase a, KnowledgeBase b, IPlatformPersistence persistence)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+#else
 
 internal class ObservationPoolJoin
 {
@@ -27,12 +37,12 @@ internal class ObservationPoolJoin
     private readonly ImmutableHashSet<ContentId> _allIncludedCapturedObservations;
 
     /// <summary>
-    /// Maps every recorded discrete timestamp to the <see cref="ContentId"/> of the <see cref="DataModel.ObservationPool.IncludedObservationSequences"/> with
+    /// Maps every recorded discrete timestamp to the <see cref="ContentId"/> of the <see cref="KnowledgeBase.Observations"/> with
     /// the latest observation recorded at that timestamp.
     /// </summary>
     private readonly ImmutableSortedDictionary<DateTime, ContentId> _absouteTimestampMap;
 
-    public static async ValueTask<ObservationPool> Add(ObservationPool a, DataModel.ObservationPool b, IPlatformPersistence persistence)
+    public static async ValueTask<KnowledgeBase> Add(KnowledgeBase a, KnowledgeBase b, IPlatformPersistence persistence)
     {
         // 1: Find first common ancestor (which is the point where all previous captured observations are exactly the same)
 
@@ -96,3 +106,5 @@ internal class ObservationPoolJoin
         }
     }
 }
+
+#endif

@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using AskFi.Runtime.Messages;
 using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
+using Microsoft.FSharp.Collections;
 using static AskFi.Runtime.DataModel;
 
 namespace AskFi.Runtime.Modules.Perspective;
@@ -29,19 +30,20 @@ internal class ObservationIntegrationModule
     public async Task Run(CancellationToken cancellationToken)
     {
         // Local pool starts out with an empty pool
-        var localHeaviestObservationPool = new ObservationPool(includedObservationSequences: null);
+        var localHeaviestObservationPool = new KnowledgeBase(observations: null, actions: null);
         var localHeaviestObservationPoolCid = _persistence.Cid(localHeaviestObservationPool);
 
         await foreach (var observation in _input.ReadAllAsync(cancellationToken)) {
             // Transform incoming observation into observation pool to merge
-            var incomingObservationPool = new ObservationPool(
-                includedObservationSequences: new Microsoft.FSharp.Collections.FSharpMap<ContentId, ContentId>(
-                    elements: new[] { new Tuple<ContentId, ContentId>(
+            var incomingObservationPool = new KnowledgeBase(
+                observations: new FSharpMap<ContentId, FSharpList<ContentId>>(
+                    elements: new[] { new Tuple<ContentId, FSharpList<ContentId>>(
                         item1: observation.ObservationSequenceIdentityCid,
-                        item2: observation.ObservationSequenceHeadCid) }));
+                        item2: new FSharpList<ContentId>(observation.ObservationSequenceHeadCid, FSharpList<ContentId>.Empty))}),
+                actions: null);
 
             // Merge incoming pool with local pool, creating a new heaviest local pool
-            var mergedObservationPool = await ObservationPoolJoin.Add(localHeaviestObservationPool, incomingObservationPool, _persistence);
+            var mergedObservationPool = await KnowledgeBaseMerge.Join(localHeaviestObservationPool, incomingObservationPool, _persistence);
             var mergedObservationPoolCid = _persistence.Cid(mergedObservationPool);
 
             if (!mergedObservationPoolCid.Raw.Equals(localHeaviestObservationPoolCid.Raw)) {
