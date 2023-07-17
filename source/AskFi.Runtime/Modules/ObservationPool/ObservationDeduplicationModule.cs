@@ -6,21 +6,21 @@ using static AskFi.Runtime.DataModel;
 namespace AskFi.Runtime.Modules.Perspective;
 
 /// <summary>
-/// Deduplicates NewObservationPool messages by only emitting those that added information to the locally ever growing pool.
+/// Deduplicates NewKnowledgeBase messages by only emitting those that added information to the locally ever growing pool.
 /// </summary>
 internal class ObservationDeduplicationModule
 {
-    private readonly ChannelReader<NewObservationPool> _input;
-    private readonly Channel<NewObservationPool> _output;
+    private readonly ChannelReader<NewKnowledgeBase> _input;
+    private readonly Channel<NewKnowledgeBase> _output;
     private readonly IPlatformPersistence _persistence;
 
-    public ChannelReader<NewObservationPool> Output => _output.Reader;
+    public ChannelReader<NewKnowledgeBase> Output => _output.Reader;
 
     public ObservationDeduplicationModule(
         IPlatformPersistence persistence,
-        ChannelReader<NewObservationPool> input)
+        ChannelReader<NewKnowledgeBase> input)
     {
-        _output = Channel.CreateUnbounded<NewObservationPool>();
+        _output = Channel.CreateUnbounded<NewKnowledgeBase>();
         _persistence = persistence;
         _input = input;
     }
@@ -36,7 +36,7 @@ internal class ObservationDeduplicationModule
 
         await foreach (var pool in _input.ReadAllAsync(cancellationToken)) {
             // Merge incoming pool with local pool, creating a new heaviest local pool
-            var incomingKnowledgeBase = await _persistence.Get<KnowledgeBase>(pool.ObservationPool);
+            var incomingKnowledgeBase = await _persistence.Get<KnowledgeBase>(pool.KnowledeBase);
             var mergedKnowledgeBase = await KnowledgeBaseMerge.Join(localHeaviestObservationPool, incomingKnowledgeBase, _persistence);
             var mergedKnowledgeBaseCid = _persistence.Cid(mergedKnowledgeBase);
 
@@ -46,7 +46,7 @@ internal class ObservationDeduplicationModule
                 localHeaviestObservationPoolCid = mergedKnowledgeBaseCid;
 
                 // Share it with others.
-                var newObservationPool = new NewObservationPool(mergedKnowledgeBaseCid);
+                var newObservationPool = new NewKnowledgeBase(mergedKnowledgeBaseCid);
                 await _output.Writer.WriteAsync(newObservationPool);
             }
         }

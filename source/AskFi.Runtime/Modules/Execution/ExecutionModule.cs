@@ -27,13 +27,14 @@ public class ExecutionModule
     public async Task Run(CancellationToken cancellationToken)
     {
         var actionSequence = ActionSequenceHead.NewIdentity(nonce: 0ul);
-        var actionSequenceCid = await _persistence.Put(actionSequence);
+        var actionSequenceIdentity = await _persistence.Put(actionSequence);
+        var actionSequenceCid = actionSequenceIdentity;
 
         await foreach (var decision in _input.ReadAllAsync(cancellationToken)) {
             var executionTasks = new List<Task<ActionExecutionResult>>();
             var executionActionMapping = new Dictionary<Task<ActionExecutionResult>, DataModel.Action>();
 
-            var decisionHead = await _persistence.Get<DecisionSequenceHead>(decision.DecisionSequenceHeadCid);
+            var decisionHead = await _persistence.Get<DecisionSequenceHead>(decision.Head);
             var decisionNode = decisionHead as DecisionSequenceHead.Decision;
             var actionSet = await _persistence.Get<ActionSet>(decisionNode.Item.ActionSet);
 
@@ -64,7 +65,9 @@ public class ExecutionModule
 
                 actionSequenceCid = await _persistence.Put(actionSequence);
 
-                await _output.Writer.WriteAsync(new ActionExecution(actionSequenceCid));
+                await _output.Writer.WriteAsync(new ActionExecution(
+                    identity: actionSequenceIdentity,
+                    head: actionSequenceCid));
             }
         }
     }

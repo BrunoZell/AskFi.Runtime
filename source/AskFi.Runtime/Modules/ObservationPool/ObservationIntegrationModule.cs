@@ -8,21 +8,21 @@ using static AskFi.Runtime.DataModel;
 namespace AskFi.Runtime.Modules.Perspective;
 
 /// <summary>
-/// Turns NewObservation messages into NewObservationPool messages given that they indeed contained new information.
+/// Turns NewObservation messages into NewKnowledgeBase messages given that they indeed contained new information.
 /// </summary>
 internal class ObservationIntegrationModule
 {
     private readonly ChannelReader<NewObservation> _input;
-    private readonly Channel<NewObservationPool> _output;
+    private readonly Channel<NewKnowledgeBase> _output;
     private readonly IPlatformPersistence _persistence;
 
-    public ChannelReader<NewObservationPool> Output => _output.Reader;
+    public ChannelReader<NewKnowledgeBase> Output => _output.Reader;
 
     public ObservationIntegrationModule(
         IPlatformPersistence persistence,
         ChannelReader<NewObservation> input)
     {
-        _output = Channel.CreateUnbounded<NewObservationPool>();
+        _output = Channel.CreateUnbounded<NewKnowledgeBase>();
         _persistence = persistence;
         _input = input;
     }
@@ -30,12 +30,12 @@ internal class ObservationIntegrationModule
     public async Task Run(CancellationToken cancellationToken)
     {
         // Local pool starts out with an empty pool
-        var localHeaviestObservationPool = new KnowledgeBase(observations: null, actions: null);
-        var localHeaviestObservationPoolCid = _persistence.Cid(localHeaviestObservationPool);
+        var localHeaviestKnowledgeBase = new KnowledgeBase(observations: null, actions: null);
+        var localHeaviestKnowledgeBaseCid = _persistence.Cid(localHeaviestKnowledgeBase);
 
         await foreach (var observation in _input.ReadAllAsync(cancellationToken)) {
             // Transform incoming observation into observation pool to merge
-            var incomingObservationPool = new KnowledgeBase(
+            var incomingKnowledgeBase = new KnowledgeBase(
                 observations: new FSharpMap<ContentId, FSharpList<ContentId>>(
                     elements: new[] { new Tuple<ContentId, FSharpList<ContentId>>(
                         item1: observation.Identity,
@@ -43,17 +43,17 @@ internal class ObservationIntegrationModule
                 actions: null);
 
             // Merge incoming pool with local pool, creating a new heaviest local pool
-            var mergedObservationPool = await KnowledgeBaseMerge.Join(localHeaviestObservationPool, incomingObservationPool, _persistence);
-            var mergedObservationPoolCid = _persistence.Cid(mergedObservationPool);
+            var mergedKnowledgeBase = await KnowledgeBaseMerge.Join(localHeaviestKnowledgeBase, incomingKnowledgeBase, _persistence);
+            var mergedKnowledgeBaseCid = _persistence.Cid(mergedKnowledgeBase);
 
-            if (!mergedObservationPoolCid.Raw.Equals(localHeaviestObservationPoolCid.Raw)) {
+            if (!mergedKnowledgeBaseCid.Raw.Equals(localHeaviestKnowledgeBaseCid.Raw)) {
                 // Found new information.
-                localHeaviestObservationPool = mergedObservationPool;
-                localHeaviestObservationPoolCid = mergedObservationPoolCid;
+                localHeaviestKnowledgeBase = mergedKnowledgeBase;
+                localHeaviestKnowledgeBaseCid = mergedKnowledgeBaseCid;
 
                 // Share it with others.
-                var newObservationPool = new NewObservationPool(mergedObservationPoolCid);
-                await _output.Writer.WriteAsync(newObservationPool);
+                var newKnowledgeBase = new NewKnowledgeBase(mergedKnowledgeBaseCid);
+                await _output.Writer.WriteAsync(newKnowledgeBase);
             }
         }
     }

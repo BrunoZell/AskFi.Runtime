@@ -10,12 +10,12 @@ public class ObserverGroup
 {
     private readonly ObserverModule _observerModule;
     private readonly ObservationIntegrationModule _perspectiveModule;
-    private readonly EmitOutput<NewObservationPool> _output;
+    private readonly EmitOutput<NewKnowledgeBase> _output;
 
     private ObserverGroup(
         ObserverModule observerModule,
         ObservationIntegrationModule perspectiveModule,
-        EmitOutput<NewObservationPool> output)
+        EmitOutput<NewKnowledgeBase> output)
     {
         _observerModule = observerModule;
         _perspectiveModule = perspectiveModule;
@@ -30,7 +30,7 @@ public class ObserverGroup
     {
         var observation = new ObserverModule(observers, persistence);
         var observationIntegration = new ObservationIntegrationModule(persistence, observation.Output);
-        var output = new EmitOutput<NewObservationPool>(messaging, observationIntegration.Output);
+        var output = new EmitOutput<NewKnowledgeBase>(messaging, observationIntegration.Output);
 
         return new(observation, observationIntegration, output);
     }

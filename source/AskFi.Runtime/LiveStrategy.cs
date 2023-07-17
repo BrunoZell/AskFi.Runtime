@@ -10,13 +10,13 @@ namespace AskFi.Runtime;
 
 public class LiveStrategy
 {
-    private readonly StreamInput<NewObservationPool> _input;
+    private readonly StreamInput<NewKnowledgeBase> _input;
     private readonly ObservationDeduplicationModule _observationDeduplication;
     private readonly StrategyModule _strategyModule;
     private readonly EmitOutput<NewDecision> _output;
 
     private LiveStrategy(
-        StreamInput<NewObservationPool> input,
+        StreamInput<NewKnowledgeBase> input,
         ObservationDeduplicationModule observationDeduplication,
         StrategyModule strategyModule,
         EmitOutput<NewDecision> output)
@@ -32,7 +32,7 @@ public class LiveStrategy
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
-        var input = new StreamInput<NewObservationPool>(messaging);
+        var input = new StreamInput<NewKnowledgeBase>(messaging);
         var observationDeduplicator = new ObservationDeduplicationModule(persistence, input.Output);
         var strategyModule = new StrategyModule(strategy, persistence, observationDeduplicator.Output);
         var output = new EmitOutput<NewDecision>(messaging, strategyModule.Output);

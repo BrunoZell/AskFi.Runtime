@@ -11,7 +11,7 @@ internal class StrategyModule
 {
     private readonly Func<Reflection, Context, Decision> _strategy;
     private readonly IPlatformPersistence _persistence;
-    private readonly ChannelReader<NewObservationPool> _input;
+    private readonly ChannelReader<NewKnowledgeBase> _input;
     private readonly Channel<NewDecision> _output;
 
     public ChannelReader<NewDecision> Output => _output;
@@ -19,7 +19,7 @@ internal class StrategyModule
     public StrategyModule(
         Func<Reflection, Context, Decision> strategy,
         IPlatformPersistence persistence,
-        ChannelReader<NewObservationPool> input)
+        ChannelReader<NewKnowledgeBase> input)
     {
         _strategy = strategy;
         _persistence = persistence;
@@ -30,10 +30,11 @@ internal class StrategyModule
     public async Task Run(CancellationToken sessionShutdown)
     {
         var decisionSequence = DecisionSequenceHead.NewStart(new DecisionSequenceStart(
-            strategy: ContentId.Zero,
-            firstContext: ContentId.Zero));
+            strategy: ContentId.Zero, // Todo: reference transferable implementation of _strategy
+            firstContext: ContentId.Zero)); // Todo: Link virtual start timestamp as a user defined knowledge base
 
-        var decisionSequenceCid = await _persistence.Put(decisionSequence);
+        var decisionSequenceIdentity = await _persistence.Put(decisionSequence);
+        var decisionSequenceCid = decisionSequenceIdentity;
 
         await foreach (var pool in _input.ReadAllAsync(sessionShutdown)) {
             var context = new Sdk.Context(query: null);
@@ -64,7 +65,9 @@ internal class StrategyModule
 
             decisionSequenceCid = await _persistence.Put(decisionSequence);
 
-            await _output.Writer.WriteAsync(new NewDecision(decisionSequenceCid));
+            await _output.Writer.WriteAsync(new NewDecision(
+                identity: decisionSequenceIdentity,
+                head: decisionSequenceCid));
         }
     }
 }

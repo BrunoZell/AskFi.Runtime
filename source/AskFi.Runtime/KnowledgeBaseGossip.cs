@@ -8,14 +8,14 @@ namespace AskFi.Runtime;
 
 public class KnowledgeBaseGossip
 {
-    private readonly StreamInput<NewObservationPool> _input;
+    private readonly StreamInput<NewKnowledgeBase> _input;
     private readonly ObservationDeduplicationModule _perspectiveMergeModule;
-    private readonly EmitOutput<NewObservationPool> _output;
+    private readonly EmitOutput<NewKnowledgeBase> _output;
 
     private KnowledgeBaseGossip(
-        StreamInput<NewObservationPool> input,
+        StreamInput<NewKnowledgeBase> input,
         ObservationDeduplicationModule perspectiveMergeModule,
-        EmitOutput<NewObservationPool> output)
+        EmitOutput<NewKnowledgeBase> output)
     {
         _input = input;
         _perspectiveMergeModule = perspectiveMergeModule;
@@ -26,9 +26,9 @@ public class KnowledgeBaseGossip
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
-        var input = new StreamInput<NewObservationPool>(messaging);
+        var input = new StreamInput<NewKnowledgeBase>(messaging);
         var observationDeduplication = new ObservationDeduplicationModule(persistence, input.Output);
-        var output = new EmitOutput<NewObservationPool>(messaging, observationDeduplication.Output);
+        var output = new EmitOutput<NewKnowledgeBase>(messaging, observationDeduplication.Output);
 
         return new(input, observationDeduplication, output);
     }

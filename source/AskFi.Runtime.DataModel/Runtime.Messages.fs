@@ -12,23 +12,29 @@ type NewObservation = {
     Head: ContentId
 }
 
-/// Nodes send this message to gossip the observation pool.
-/// Observation pool merger send them out when they received a NewObservation message.
-type NewObservationPool = {
-    /// Cid to the latest merged observation pool CRDT (DataModel.ObservationPool)
-    ObservationPool: ContentId
+/// Nodes send this message to gossip the latest knowledge base.
+/// Knowledge base gossiper send them out when they received a NewObservation message.
+type NewKnowledgeBase = {
+    /// Cid to the latest heaviest knowledge base
+    KnowledeBase: ContentId // KnowledeBase
 }
 
 /// Message emitted from Strategy Module when a non-inaction decision has been made
 type NewDecision = {
+    /// Cid to the original DecisionSequenceHead.Identity of the newly produced decision sequence head.
+    Identity: ContentId
+
     /// Cid to the newly created decision sequence head (DataModel.DecisionSequenceHead)
-    DecisionSequenceHeadCid: ContentId
+    Head: ContentId
 }
 
 /// Represents the result of an action execution by a broker
 type ActionExecution = {
-    /// Cid to the newly created execution sequence head (DataModel.ExecutionSequenceHead)
-    ExecutionSequenceHeadCid: ContentId
+    /// Cid to the original ActionSequenceHead.Identity of the newly produced action sequence head.
+    Identity: ContentId
+
+    /// Cid to the newly created action sequence head (DataModel.ActionSequenceHead)
+    Head: ContentId
 }
 
 /// Broadcasted by persistence system for other nodes to eagerly receive data referenced in other messages.
