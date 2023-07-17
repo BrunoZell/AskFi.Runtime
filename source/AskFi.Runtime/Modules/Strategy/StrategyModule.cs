@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using AskFi.Runtime.Messages;
+using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
 using static AskFi.Runtime.DataModel;
 using static AskFi.Sdk;
@@ -28,7 +29,10 @@ internal class StrategyModule
 
     public async Task Run(CancellationToken sessionShutdown)
     {
-        var decisionSequence = DecisionSequenceHead.Start;
+        var decisionSequence = DecisionSequenceHead.NewStart(new DecisionSequenceStart(
+            strategy: ContentId.Zero,
+            firstContext: ContentId.Zero));
+
         var decisionSequenceCid = await _persistence.Put(decisionSequence);
 
         await foreach (var pool in _input.ReadAllAsync(sessionShutdown)) {
@@ -44,17 +48,17 @@ internal class StrategyModule
             // Strategy decided to do something.
 
             // Build action set
-            var initiations = new List<DataModel.ActionInitiation>();
+            var actions = new List<DataModel.Action>();
             foreach (var initiative in initiate.Initiatives) {
                 var actionCid = await _persistence.Put(initiative.Action);
-                initiations.Add(new DataModel.ActionInitiation(initiative.Type, actionCid));
+                actions.Add(new DataModel.Action(initiative.Type, actionCid));
             }
 
-            var actionSet = new ActionSet(initiations.ToArray());
+            var actionSet = new ActionSet(actions.ToArray());
             var actionSetCid = await _persistence.Put(actionSet);
 
             // Append this action set to the decision sequence
-            decisionSequence = DecisionSequenceHead.NewInitiative(new DecisionSequenceNode(
+            decisionSequence = DecisionSequenceHead.NewDecision(new DecisionSequenceNode(
                 previous: decisionSequenceCid,
                 actionSet: actionSetCid));
 
