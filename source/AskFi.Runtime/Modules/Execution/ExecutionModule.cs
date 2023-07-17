@@ -26,23 +26,23 @@ public class ExecutionModule
 
     public async Task Run(CancellationToken cancellationToken)
     {
-        var executionSequence = ExecutionSequenceHead.Start;
-        var executionSequenceCid = await _persistence.Put(executionSequence);
+        var actionSequence = ActionSequenceHead.NewIdentity(nonce: 0ul);
+        var actionSequenceCid = await _persistence.Put(actionSequence);
 
         await foreach (var decision in _input.ReadAllAsync(cancellationToken)) {
             var executionTasks = new List<Task<ActionExecutionResult>>();
-            var executionInitiationMapping = new Dictionary<Task<ActionExecutionResult>, ActionInitiation>();
+            var executionActionMapping = new Dictionary<Task<ActionExecutionResult>, DataModel.Action>();
 
             var decisionHead = await _persistence.Get<DecisionSequenceHead>(decision.DecisionSequenceHeadCid);
-            var decisionNode = decisionHead as DecisionSequenceHead.Initiative;
-            var actionSet = await _persistence.Get<ActionSet>(decisionNode.Node.ActionSet);
+            var decisionNode = decisionHead as DecisionSequenceHead.Decision;
+            var actionSet = await _persistence.Get<ActionSet>(decisionNode.Item.ActionSet);
 
             // Assign all action initiations an id and send to according broker instance
-            foreach (var initiation in actionSet.Initiations) {
-                if (_brokerMultiplexer.TryStartActionExecution(initiation, out var actionExecution)) {
+            foreach (var action in actionSet.Actions) {
+                if (_brokerMultiplexer.TryStartActionExecution(action, out var actionExecution)) {
                     // Broker available
                     executionTasks.Add(actionExecution);
-                    executionInitiationMapping.Add(actionExecution, initiation);
+                    executionActionMapping.Add(actionExecution, action);
                 } else {
                     // No matching IBroker instance available. Do nothing.
                 }
@@ -52,17 +52,19 @@ public class ExecutionModule
             // Then immediately build the execution sequence.
             while (executionTasks.Count > 0) {
                 var completed = await Task.WhenAny(executionTasks);
-                var initiation = executionInitiationMapping[completed];
+                var action = executionActionMapping[completed];
+                var result = await completed;
                 executionTasks.Remove(completed);
 
                 // Write and publish execution sequence
-                executionSequence = ExecutionSequenceHead.NewExecution(new ExecutionSequenceNode(
-                    previous: executionSequenceCid,
-                    action: initiation));
+                actionSequence = ActionSequenceHead.NewAction(new ActionSequenceNode(
+                    previous: actionSequenceCid,
+                    executed: action,
+                    result: result));
 
-                executionSequenceCid = await _persistence.Put(executionSequence);
+                actionSequenceCid = await _persistence.Put(actionSequence);
 
-                await _output.Writer.WriteAsync(new ActionExecution(executionSequenceCid));
+                await _output.Writer.WriteAsync(new ActionExecution(actionSequenceCid));
             }
         }
     }
