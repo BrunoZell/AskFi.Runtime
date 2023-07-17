@@ -11,7 +11,7 @@ public class Blake3JsonSerializer : ISerializer
         var bytes = System.Text.Encoding.UTF8.GetBytes(json);
         var hash = Hasher.Hash(bytes);
         var hashRaw = hash.AsSpanUnsafe().ToArray();
-        return (new ContentId(hashRaw), bytes);
+        return (ContentId.NewContentId(hashRaw), bytes);
     }
 
     public TDatum Deserialize<TDatum>(ContentId cid, byte[] raw)
