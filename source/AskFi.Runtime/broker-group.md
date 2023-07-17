@@ -1,4 +1,4 @@
-# Runtime Configuration: Broker
+# Runtime Component: Broker Group
 
 Listen to `NewDecision` messages are executed accordingly, given the required `IBroker`-instances are set up for this module instance.
 

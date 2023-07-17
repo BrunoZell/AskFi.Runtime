@@ -1,4 +1,4 @@
-# Runtime Configuration: Observation Gossip
+# Runtime Configuration: Knowledge Base Gossip
 
 Actively listening to new observations to further gossip a more informative observation pool
 

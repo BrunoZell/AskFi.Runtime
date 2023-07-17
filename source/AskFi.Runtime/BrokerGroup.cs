@@ -2,17 +2,16 @@ using AskFi.Runtime.Messages;
 using AskFi.Runtime.Modules.Execution;
 using AskFi.Runtime.Modules.Input;
 using AskFi.Runtime.Modules.Output;
-using AskFi.Runtime.Modules.Perspective;
 using AskFi.Runtime.Platform;
 
 namespace AskFi.Runtime;
-public class Broker
+public class BrokerGroup
 {
     private readonly StreamInput<NewDecision> _input;
     private readonly ExecutionModule _executionModule;
     private readonly EmitOutput<ActionExecution> _output;
 
-    private Broker(
+    private BrokerGroup(
         StreamInput<NewDecision> input,
         ExecutionModule executionModule,
         EmitOutput<ActionExecution> output)
@@ -22,7 +21,7 @@ public class Broker
         _output = output;
     }
 
-    public static Broker Build(
+    public static BrokerGroup Build(
         IReadOnlyDictionary<Type, object> broker,
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)

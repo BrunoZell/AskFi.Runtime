@@ -6,13 +6,13 @@ using AskFi.Runtime.Platform;
 
 namespace AskFi.Runtime;
 
-public class Scraper
+public class ObserverGroup
 {
     private readonly ObserverModule _observerModule;
     private readonly ObservationIntegrationModule _perspectiveModule;
     private readonly EmitOutput<NewObservationPool> _output;
 
-    private Scraper(
+    private ObserverGroup(
         ObserverModule observerModule,
         ObservationIntegrationModule perspectiveModule,
         EmitOutput<NewObservationPool> output)
@@ -23,7 +23,7 @@ public class Scraper
     }
 
     /// <param name="observers">TValue = <see cref="Sdk.IObserver{Percept}"/> (where Percept = .Key)</param>
-    public static Scraper Build(
+    public static ObserverGroup Build(
         IReadOnlyDictionary<Type, object> observers,
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)

@@ -1,4 +1,4 @@
-# Runtime Configuration: Live Strategy
+# Runtime Component: Live Strategy
 
 Run custom strategies in the form of `type Decide = Reflection -> Context -> Decision` against newest versions of the observation pool.
 

@@ -1,4 +1,4 @@
-# Runtime Configuration: Scraper
+# Runtime Component: Observer Group
 
 ## Processing Pipeline
 

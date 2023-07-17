@@ -16,10 +16,10 @@ The _AskFi Runtime_ is a library of composable modules that:
 
 ## Predefined Configurations
 
-- [Scraper](scraper.md)
-- [Observation Gossip](observation-gossip.md)
+- [Observer Group](observer-group.md)
+- [Knowledge Base Gossip](knowledge-base-gossip.md)
 - [Live Strategy](live-strategy.md)
-- [Broker](broker.md)
+- [Broker Group](broker-group.md)
 
 ## Module Implementation Details
 

@@ -6,13 +6,13 @@ using AskFi.Runtime.Platform;
 
 namespace AskFi.Runtime;
 
-public class ObservationGossip
+public class KnowledgeBaseGossip
 {
     private readonly StreamInput<NewObservationPool> _input;
     private readonly ObservationDeduplicationModule _perspectiveMergeModule;
     private readonly EmitOutput<NewObservationPool> _output;
 
-    private ObservationGossip(
+    private KnowledgeBaseGossip(
         StreamInput<NewObservationPool> input,
         ObservationDeduplicationModule perspectiveMergeModule,
         EmitOutput<NewObservationPool> output)
@@ -22,7 +22,7 @@ public class ObservationGossip
         _output = output;
     }
 
-    public static ObservationGossip Build(
+    public static KnowledgeBaseGossip Build(
         IPlatformPersistence persistence,
         IPlatformMessaging messaging)
     {
