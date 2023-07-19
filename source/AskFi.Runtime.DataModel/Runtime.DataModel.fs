@@ -37,7 +37,7 @@ and ObservationSequenceNode = {
     Previous: ContentId // ObservationSequenceHead
 
     /// Cid to the then latest CapturedObservation that caused this observation sequence head to be appended.
-    Observation: ContentId // CapturedObservation
+    Capture: CapturedObservation
 }
 
 // #####################

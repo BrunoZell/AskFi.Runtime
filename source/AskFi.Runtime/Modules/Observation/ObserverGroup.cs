@@ -75,12 +75,12 @@ internal sealed class ObserverGroup : IAsyncDisposable
         var observationSequenceCid = observationSequenceIdentity;
 
         // Sequentially receives all observations from IObserver-instances in this group as they happen.
-        await foreach (var newObservation in _incomingObservations.Reader.ReadAllAsync(_cancellation.Token)) {
+        await foreach (var newInternalObservation in _incomingObservations.Reader.ReadAllAsync(_cancellation.Token)) {
             observationSequence = ObservationSequenceHead.NewObservation(new ObservationSequenceNode(
                 previous: observationSequenceCid,
-                observation: newObservation.CapturedObservationCid));
+                capture: newInternalObservation.CapturedObservation));
 
-            // Perf: Generate CID localy and upload in the background
+            // Perf: Generate CID locally and upload in the background
             observationSequenceCid = await _persistence.Put(observationSequence);
 
             await _output.WriteAsync(new NewObservation(

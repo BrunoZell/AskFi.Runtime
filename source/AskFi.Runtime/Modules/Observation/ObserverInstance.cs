@@ -90,10 +90,8 @@ internal sealed class ObserverInstance : IAsyncDisposable
                     perceptType: typeof(TPercept),
                     observation: observationCid);
 
-                var capturedObservationCid = await persistence.Put(capturedObservation);
-
                 await observationSink.WriteAsync(new() {
-                    CapturedObservationCid = capturedObservationCid,
+                    CapturedObservation = capturedObservation,
                     ObserverInstance = observer,
                     PerceptType = typeof(TPercept)
                 });

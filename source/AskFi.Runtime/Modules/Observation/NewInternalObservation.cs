@@ -1,5 +1,3 @@
-using AskFi.Runtime.Persistence;
-
 namespace AskFi.Runtime.Modules.Observation;
 
 /// <summary>
@@ -16,9 +14,9 @@ internal sealed class NewInternalObservation
     public required object ObserverInstance { get; init; } // IObserver<P> instance
 
     /// <summary>
-    /// Cid to the newly produced CapturedObservation'Percept>
+    /// Cid to the newly produced DataModel.CapturedObservation
     /// </summary>
-    public required ContentId CapturedObservationCid { get; init; }
+    public required DataModel.CapturedObservation CapturedObservation { get; init; }
 
     /// <summary>
     /// Type of 'Percept
