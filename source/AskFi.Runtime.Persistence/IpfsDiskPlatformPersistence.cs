@@ -1,29 +1,22 @@
-using AskFi.Runtime.Messages;
 using AskFi.Runtime.Persistence.Caching;
 using AskFi.Runtime.Persistence.Encoding;
 using AskFi.Runtime.Platform;
 
 namespace AskFi.Runtime.Persistence;
 
-public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence, IAsyncDisposable
+public class IpfsDiskPlatformPersistence : IPlatformPersistence
 {
     private readonly ISerializer _serializer;
-    private readonly IPlatformMessaging _messaging;
-    private readonly Task _platformPutListener;
-    private readonly CancellationTokenSource _cancellation = new();
 
     private readonly ObjectCache _inMemoryObjectCache = new();
     private readonly DiskCache _diskCache;
 
-    public IpfsDiskRedisPlatformPersistence(
+    public IpfsDiskPlatformPersistence(
         ISerializer serializer,
-        DirectoryInfo localPersistenceDirectory,
-        IPlatformMessaging messaging)
+        DirectoryInfo localPersistenceDirectory)
     {
         _serializer = serializer;
-        _messaging = messaging;
         _diskCache = new(localPersistenceDirectory);
-        _platformPutListener = Task.Run(ListenToPersistentPutMessages);
     }
 
     public ContentId Cid<TDatum>(TDatum datum)
@@ -75,11 +68,6 @@ public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence, IAsyncDisp
         // 2. Insert into in-memory cid->obj mapping for future GET requests on that CID.
         _inMemoryObjectCache.Set(cid, datum);
 
-        // 2. Broadcast PUT < 4KB via platform message 'PersistencePut' (if payload is below 4KB)
-        if (raw.Length < 1024 * 4) {
-            _messaging.Emit(new PersistencePut(cid, raw, typeof(TDatum)));
-        }
-
         // 3. Write data to disk for persistence
         await _diskCache.WriteToDisk(cid, raw);
 
@@ -87,38 +75,5 @@ public class IpfsDiskRedisPlatformPersistence : IPlatformPersistence, IAsyncDisp
         // Todo: Call IPFS Cluster API
 
         return cid;
-    }
-
-    private async Task ListenToPersistentPutMessages()
-    {
-        while (true) {
-            _cancellation.Token.ThrowIfCancellationRequested();
-
-            // Continuously listen to persistence put platform messages and store puts in this instances memory cache.
-            await foreach (var put in _messaging.Listen<PersistencePut>(_cancellation.Token)) {
-                // Call DeserializeAndLoad<TDatum> with TDatum = put.TDatum
-                var method = typeof(IpfsDiskRedisPlatformPersistence).GetMethod(nameof(DeserializeAndLoad));
-                var generic = method!.MakeGenericMethod(put.TDatum);
-                generic.Invoke(this, new object[] { put.Cid, put.Content });
-            }
-        }
-    }
-
-    /// <summary>
-    /// Deserializes received content and stores it in the in memory object cache
-    /// </summary>
-    private void DeserializeAndLoad<TDatum>(ContentId cid, byte[] content)
-    {
-        // Deserialize loaded raw data
-        var datum = _serializer.Deserialize<TDatum>(cid, content);
-
-        // Insert into in-memory cid->obj mapping for future GET requests on that CID.
-        _inMemoryObjectCache.Set(cid, datum);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        _cancellation.Cancel();
-        await _platformPutListener;
     }
 }

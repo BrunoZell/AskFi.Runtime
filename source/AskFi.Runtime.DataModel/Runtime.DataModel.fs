@@ -140,7 +140,7 @@ and ContextSequenceNode = {
     Previous: ContentId // ContextSequenceHead
 
     /// What new observation got appended to this context sequence.
-    Memory: ContentId // Happening
+    Observation: ContentId // CapturedObservation
 }
 
 /// Output type produced by a wrapped sequencer, referencing all context sequence heads it every produced,
