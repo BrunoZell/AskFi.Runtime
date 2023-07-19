@@ -36,7 +36,7 @@ and ObservationSequenceNode = {
     /// Links previous ObservationSequenceHead to form a temporal order.
     Previous: ContentId // ObservationSequenceHead
 
-    /// Cid to the then latest CapturedObservation that caused this update in perspective.
+    /// Cid to the then latest CapturedObservation that caused this observation sequence head to be appended.
     Observation: ContentId // CapturedObservation
 }
 
@@ -140,7 +140,7 @@ and ContextSequenceNode = {
     Previous: ContentId // ContextSequenceHead
 
     /// What new observation got appended to this context sequence.
-    Observation: ContentId // CapturedObservation
+    Observation: CapturedObservation
 }
 
 /// Output type produced by a wrapped sequencer, referencing all context sequence heads it every produced,
