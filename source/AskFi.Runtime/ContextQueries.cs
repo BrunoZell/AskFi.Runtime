@@ -21,7 +21,29 @@ public sealed class ContextQueries : IContextQueries
 
     public FSharpOption<CapturedObservation<TPerception>> latest<TPerception>()
     {
-        throw new NotImplementedException();
+        ContextSequenceHead contextSequenceHead;
+
+        using (NoSynchronizationContextScope.Enter()) {
+            contextSequenceHead = _persistence.Get<ContextSequenceHead>(_latestContextSequenceHead).Result;
+        }
+
+        while (true) {
+            if (contextSequenceHead is not ContextSequenceHead.Context context) {
+                throw new InvalidOperationException($"No observations of type {typeof(TPerception).FullName} the context sequence. Reached the identity node of the context sequence. No more observations to inspect.");
+            }
+
+            if (context.Node.Observation.PerceptType == typeof(TPerception)) {
+                // Percept type fits. Load and return.
+                using (NoSynchronizationContextScope.Enter()) {
+                    return _persistence.Get<CapturedObservation<TPerception>>(context.Node.Observation.Observation).Result;
+                }
+            } else {
+                // Look for immediate predecessor.
+                using (NoSynchronizationContextScope.Enter()) {
+                    contextSequenceHead = _persistence.Get<ContextSequenceHead>(context.Node.Previous).Result;
+                }
+            }
+        }
     }
 
     public IEnumerable<CapturedObservation<TPerception>> since<TPerception>(DateTime timestamp)
@@ -54,7 +76,7 @@ public sealed class ContextQueries : IContextQueries
         throw new NotImplementedException();
     }
 
-    private IReadOnlyList<ContextSequenceHead.Context> LatestContxtSequenceFromSinceToLatest(ContextSequenceHead perspectiveSequenceHead, DateTime since)
+    private IReadOnlyList<ContextSequenceHead.Context> LatestContxtSequenceFromSinceToLatest(ContextSequenceHead contextSequenceHead, DateTime since)
     {
         // This is to buffer all observations that happens after 'since' until the first observation is inspected that came before 'since'.
         // This means that before anything is returned, all requested observations are loaded into memory.
@@ -63,7 +85,7 @@ public sealed class ContextQueries : IContextQueries
         var selectedObservations = new List<ContextSequenceHead.Context>();
 
         while (true) {
-            if (perspectiveSequenceHead is ContextSequenceHead.Context context) {
+            if (contextSequenceHead is ContextSequenceHead.Context context) {
                 if (context.Node.Observation.At > since) {
                     selectedObservations.Add(context);
                 } else {
@@ -73,11 +95,11 @@ public sealed class ContextQueries : IContextQueries
                 }
 
                 using (NoSynchronizationContextScope.Enter()) {
-                    perspectiveSequenceHead = _persistence.Get<ContextSequenceHead>(context.Node.Previous).Result;
+                    contextSequenceHead = _persistence.Get<ContextSequenceHead>(context.Node.Previous).Result;
                 }
             } else {
                 // No more observations (first node of linked list)
-                Debug.Assert(perspectiveSequenceHead is ContextSequenceHead.Identity, "PerspectiveSequenceHead should have only two union cases: Identity | Context");
+                Debug.Assert(contextSequenceHead is ContextSequenceHead.Identity, "PerspectiveSequenceHead should have only two union cases: Identity | Context");
                 break;
             }
         }
