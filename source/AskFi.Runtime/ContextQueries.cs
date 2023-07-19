@@ -49,28 +49,22 @@ public sealed class ContextQueries : IContextQueries
 
     public IEnumerable<CapturedObservation<TPercept>> inTimeRange<TPercept>(DateTime from, DateTime to)
     {
-        var l = List().ToList();
-        return l;
+        ContextSequenceHead latestContextSequenceHead;
 
-        IEnumerable<CapturedObservation<TPercept>> List()
-        {
-            ContextSequenceHead latestContextSequenceHead;
+        using (NoSynchronizationContextScope.Enter()) {
+            latestContextSequenceHead = _persistence.Get<ContextSequenceHead>(_latestContextSequenceHead).Result;
+        }
+
+        foreach (var capturedObservation in ObservationsOfTypeInTimeRange<TPercept>(latestContextSequenceHead, from, to).Reverse()) {
+
+            // Load observation from context sequence node.
+            CapturedObservation<TPercept> observation;
 
             using (NoSynchronizationContextScope.Enter()) {
-                latestContextSequenceHead = _persistence.Get<ContextSequenceHead>(_latestContextSequenceHead).Result;
+                observation = _persistence.Get<CapturedObservation<TPercept>>(capturedObservation.Observation).Result;
             }
 
-            foreach (var capturedObservation in ObservationsOfTypeInTimeRange<TPercept>(latestContextSequenceHead, from, to).Reverse()) {
-
-                // Load observation from context sequence node.
-                CapturedObservation<TPercept> observation;
-
-                using (NoSynchronizationContextScope.Enter()) {
-                    observation = _persistence.Get<CapturedObservation<TPercept>>(capturedObservation.Observation).Result;
-                }
-
-                yield return observation;
-            }
+            yield return observation;
         }
     }
 
