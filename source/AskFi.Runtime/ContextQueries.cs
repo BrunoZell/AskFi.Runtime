@@ -4,6 +4,7 @@ using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
 using Microsoft.FSharp.Core;
 using static AskFi.Runtime.DataModel;
+using static AskFi.Runtime.DataModel.ContextSequenceHead;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime;
@@ -46,33 +47,39 @@ public sealed class ContextQueries : IContextQueries
         }
     }
 
-    public IEnumerable<CapturedObservation<TPercept>> since<TPercept>(DateTime timestamp)
+    public IEnumerable<CapturedObservation<TPercept>> inTimeRange<TPercept>(DateTime from, DateTime to)
     {
-        ContextSequenceHead latestContextSequenceHead;
+        var l = List().ToList();
+        return l;
 
-        using (NoSynchronizationContextScope.Enter()) {
-            latestContextSequenceHead = _persistence.Get<ContextSequenceHead>(_latestContextSequenceHead).Result;
-        }
-
-        foreach (var capturedObservation in LatestContxtSequenceFromSinceToLatest<TPercept>(latestContextSequenceHead, timestamp)) {
-
-            // Load observation from context sequence node.
-            CapturedObservation<TPercept> observation;
+        IEnumerable<CapturedObservation<TPercept>> List()
+        {
+            ContextSequenceHead latestContextSequenceHead;
 
             using (NoSynchronizationContextScope.Enter()) {
-                observation = _persistence.Get<CapturedObservation<TPercept>>(capturedObservation.Observation).Result;
+                latestContextSequenceHead = _persistence.Get<ContextSequenceHead>(_latestContextSequenceHead).Result;
             }
 
-            yield return observation;
+            foreach (var capturedObservation in ObservationsOfTypeInTimeRange<TPercept>(latestContextSequenceHead, from, to).Reverse()) {
+
+                // Load observation from context sequence node.
+                CapturedObservation<TPercept> observation;
+
+                using (NoSynchronizationContextScope.Enter()) {
+                    observation = _persistence.Get<CapturedObservation<TPercept>>(capturedObservation.Observation).Result;
+                }
+
+                yield return observation;
+            }
         }
     }
 
-    public IEnumerable<(FSharpOption<CapturedObservation<TPercept1>>, FSharpOption<CapturedObservation<TPercept2>>)> since<TPercept1, TPercept2>(DateTime timestamp)
+    public IEnumerable<(FSharpOption<CapturedObservation<TPercept1>>, FSharpOption<CapturedObservation<TPercept2>>)> inTimeRange<TPercept1, TPercept2>(DateTime from, DateTime to)
     {
         throw new NotImplementedException();
     }
 
-    private IReadOnlyList<CapturedObservation> LatestContxtSequenceFromSinceToLatest<TPercept>(ContextSequenceHead contextSequenceHead, DateTime since)
+    private IReadOnlyList<CapturedObservation> ObservationsOfTypeInTimeRange<TPercept>(ContextSequenceHead contextSequenceHead, DateTime from, DateTime to)
     {
         // This is to buffer all observations that happens after 'since' until the first observation is inspected that came before 'since'.
         // This means that before anything is returned, all requested observations are loaded into memory.
@@ -82,13 +89,13 @@ public sealed class ContextQueries : IContextQueries
 
         while (true) {
             if (contextSequenceHead is ContextSequenceHead.Context context) {
-                if (context.Node.Observation.At > since) {
+                if (context.Node.Observation.At >= from) {
                     // Only return observations of requested type TPercept. Ignore all others.
-                    if (context.Node.Observation.PerceptType == typeof(TPercept)) {
+                    if (context.Node.Observation.At < to && context.Node.Observation.PerceptType == typeof(TPercept)) {
                         selectedObservations.Add(context.Node.Observation);
                     }
                 } else {
-                    // Found first observation earlier than 'since'.
+                    // Found first observation earlier than 'from'.
                     // Stop iteration here because the timestamps can only ever decrease into the pest.
                     break;
                 }
