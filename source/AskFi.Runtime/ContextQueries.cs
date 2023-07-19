@@ -19,7 +19,7 @@ public sealed class ContextQueries : IContextQueries
         _persistence = persistence;
     }
 
-    public FSharpOption<CapturedObservation<TPerception>> latest<TPerception>()
+    public FSharpOption<CapturedObservation<TPercept>> latest<TPercept>()
     {
         ContextSequenceHead contextSequenceHead;
 
@@ -29,13 +29,13 @@ public sealed class ContextQueries : IContextQueries
 
         while (true) {
             if (contextSequenceHead is not ContextSequenceHead.Context context) {
-                throw new InvalidOperationException($"No observations of type {typeof(TPerception).FullName} the context sequence. Reached the identity node of the context sequence. No more observations to inspect.");
+                throw new InvalidOperationException($"No observations of type {typeof(TPercept).FullName} the context sequence. Reached the identity node of the context sequence. No more observations to inspect.");
             }
 
-            if (context.Node.Observation.PerceptType == typeof(TPerception)) {
+            if (context.Node.Observation.PerceptType == typeof(TPercept)) {
                 // Percept type fits. Load and return.
                 using (NoSynchronizationContextScope.Enter()) {
-                    return _persistence.Get<CapturedObservation<TPerception>>(context.Node.Observation.Observation).Result;
+                    return _persistence.Get<CapturedObservation<TPercept>>(context.Node.Observation.Observation).Result;
                 }
             } else {
                 // Look for immediate predecessor.
@@ -46,7 +46,7 @@ public sealed class ContextQueries : IContextQueries
         }
     }
 
-    public IEnumerable<CapturedObservation<TPerception>> since<TPerception>(DateTime timestamp)
+    public IEnumerable<CapturedObservation<TPercept>> since<TPercept>(DateTime timestamp)
     {
         ContextSequenceHead latestContextSequenceHead;
 
@@ -54,40 +54,39 @@ public sealed class ContextQueries : IContextQueries
             latestContextSequenceHead = _persistence.Get<ContextSequenceHead>(_latestContextSequenceHead).Result;
         }
 
-        foreach (var context in LatestContxtSequenceFromSinceToLatest(latestContextSequenceHead, timestamp)) {
-            // Only return observations of requested type TPerception. Ignore all others.
-            if (context.Node.Observation.PerceptType != typeof(TPerception)) {
-                continue;
-            }
+        foreach (var capturedObservation in LatestContxtSequenceFromSinceToLatest<TPercept>(latestContextSequenceHead, timestamp)) {
 
             // Load observation from context sequence node.
-            CapturedObservation<TPerception> observation;
+            CapturedObservation<TPercept> observation;
 
             using (NoSynchronizationContextScope.Enter()) {
-                observation = _persistence.Get<CapturedObservation<TPerception>>(context.Node.Previous).Result;
+                observation = _persistence.Get<CapturedObservation<TPercept>>(capturedObservation.Observation).Result;
             }
 
             yield return observation;
         }
     }
 
-    public IEnumerable<(FSharpOption<CapturedObservation<Perception1>>, FSharpOption<CapturedObservation<Perception2>>)> since<Perception1, Perception2>(DateTime timestamp)
+    public IEnumerable<(FSharpOption<CapturedObservation<TPercept1>>, FSharpOption<CapturedObservation<TPercept2>>)> since<TPercept1, TPercept2>(DateTime timestamp)
     {
         throw new NotImplementedException();
     }
 
-    private IReadOnlyList<ContextSequenceHead.Context> LatestContxtSequenceFromSinceToLatest(ContextSequenceHead contextSequenceHead, DateTime since)
+    private IReadOnlyList<CapturedObservation> LatestContxtSequenceFromSinceToLatest<TPercept>(ContextSequenceHead contextSequenceHead, DateTime since)
     {
         // This is to buffer all observations that happens after 'since' until the first observation is inspected that came before 'since'.
         // This means that before anything is returned, all requested observations are loaded into memory.
         // Todo: to optimize this, the runtime should eagerly build the reversed linked list and provide an index into all nodes via a timestamp.
         // Then only a tree-node is returned and the iteration of it is on the user.
-        var selectedObservations = new List<ContextSequenceHead.Context>();
+        var selectedObservations = new List<CapturedObservation>();
 
         while (true) {
             if (contextSequenceHead is ContextSequenceHead.Context context) {
                 if (context.Node.Observation.At > since) {
-                    selectedObservations.Add(context);
+                    // Only return observations of requested type TPercept. Ignore all others.
+                    if (context.Node.Observation.PerceptType == typeof(TPercept)) {
+                        selectedObservations.Add(context.Node.Observation);
+                    }
                 } else {
                     // Found first observation earlier than 'since'.
                     // Stop iteration here because the timestamps can only ever decrease into the pest.
@@ -99,7 +98,7 @@ public sealed class ContextQueries : IContextQueries
                 }
             } else {
                 // No more observations (first node of linked list)
-                Debug.Assert(contextSequenceHead is ContextSequenceHead.Identity, "PerspectiveSequenceHead should have only two union cases: Identity | Context");
+                Debug.Assert(contextSequenceHead is ContextSequenceHead.Identity, $"{nameof(ContextSequenceHead)} should have only two union cases: Identity | Context");
                 break;
             }
         }

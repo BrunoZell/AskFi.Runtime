@@ -46,7 +46,7 @@ internal sealed class ObserverGroup : IAsyncDisposable
             .Count();
 
         if (distinctObserverInstances != observers.Count) {
-            throw new ArgumentException("Each distinct IObserver-instance can only be operated once by the Observer Module. The passed list containes double entries.");
+            throw new ArgumentException("Each distinct IObserver-instance can only be operated once by the Observer Module. The passed list contains double entries.");
         }
 
         var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -64,7 +64,7 @@ internal sealed class ObserverGroup : IAsyncDisposable
     }
 
     /// <summary>
-    /// Long-running background task that reads all new observations pooled accross all IObserver instances and
+    /// Long-running background task that reads all new observations pooled across all IObserver instances and
     /// sequences them into a <see cref="ObservationSequenceHead"/>.
     /// This sequence introduces a relative ordering in time between observations of the same Observer Group.
     /// </summary>
