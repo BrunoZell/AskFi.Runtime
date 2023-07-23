@@ -2,9 +2,10 @@ using System.Diagnostics;
 using AskFi.Runtime.Internal;
 using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
+using Microsoft.FSharp.Collections;
 using Microsoft.FSharp.Core;
 using static AskFi.Runtime.DataModel;
-using static AskFi.Runtime.DataModel.ContextSequenceHead;
+using static AskFi.Runtime.Index;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime;
@@ -12,11 +13,16 @@ namespace AskFi.Runtime;
 public sealed class ContextQueries : IContextQueries
 {
     private readonly ContentId _latestContextSequenceHead;
+    private readonly ContextSequenceIndex _index;
     private readonly IPlatformPersistence _persistence;
 
-    public ContextQueries(ContentId latestContextSequenceHead, IPlatformPersistence persistence)
+    public ContextQueries(
+        ContentId latestContextSequenceHead,
+        ContextSequenceIndex index,
+        IPlatformPersistence persistence)
     {
         _latestContextSequenceHead = latestContextSequenceHead;
+        _index = index;
         _persistence = persistence;
     }
 
@@ -47,16 +53,32 @@ public sealed class ContextQueries : IContextQueries
         }
     }
 
-    public IEnumerable<CapturedObservation<TPercept>> inTimeRange<TPercept>(DateTime from, DateTime to)
+    public async IEnumerable<CapturedObservation<TPercept>> inTimeRange<TPercept>(DateTime from, DateTime to)
     {
-        ContextSequenceHead latestContextSequenceHead;
+        // Sort timestamps
+        // Todo: Make index.Timestamp a sorted set at rest, so that not each query needs to sort all timestamps again.
+        var timestampIndex = await _persistence.Get<FSharpMap<DateTime, ulong>>(_index.Timestamps);
+        var sortedSet = timestampIndex.Keys.ToList();
+        sortedSet.Sort();
+
+        // Look up 'from' in index.Timestamp. Take the earliest actual timestamp >= from
+        var fromOrdinal = timestampIndex[sortedSet[BinarySearchClosest(sortedSet, from)]];
+
+        // Look up 'to' in index.Timestamp. Take the latest actual timestamp < to
+        var toOrdinal = timestampIndex[sortedSet[BinarySearchClosest(sortedSet, to)]];
+
+        // Map<uint64, ContentId<ContextSequenceHead.Context>>
+        var pointerIndex = await _persistence.Get<FSharpMap<ulong, ContentId>>(_index.Pointer);
+        var latestContextHead = pointerIndex[fromOrdinal];
+        var observationCount = fromOrdinal - toOrdinal;
+
+        ContextSequenceHead contextSequenceHead;
 
         using (NoSynchronizationContextScope.Enter()) {
-            latestContextSequenceHead = _persistence.Get<ContextSequenceHead>(_latestContextSequenceHead).Result;
+            contextSequenceHead = _persistence.Get<ContextSequenceHead>(latestContextHead).Result;
         }
 
-        foreach (var capturedObservation in ObservationsOfTypeInTimeRange<TPercept>(latestContextSequenceHead, from, to).Reverse()) {
-
+        foreach (var capturedObservation in ObservationsOfTypeFromLatestToFrom<TPercept>(contextSequenceHead, from).Reverse()) {
             // Load observation from context sequence node.
             CapturedObservation<TPercept> observation;
 
@@ -73,7 +95,7 @@ public sealed class ContextQueries : IContextQueries
         throw new NotImplementedException();
     }
 
-    private IReadOnlyList<CapturedObservation> ObservationsOfTypeInTimeRange<TPercept>(ContextSequenceHead contextSequenceHead, DateTime from, DateTime to)
+    private IReadOnlyList<CapturedObservation> ObservationsOfTypeFromLatestToFrom<TPercept>(ContextSequenceHead contextSequenceHead, DateTime from)
     {
         // This is to buffer all observations that happens after 'since' until the first observation is inspected that came before 'since'.
         // This means that before anything is returned, all requested observations are loaded into memory.
@@ -83,15 +105,15 @@ public sealed class ContextQueries : IContextQueries
 
         while (true) {
             if (contextSequenceHead is ContextSequenceHead.Context context) {
-                if (context.Node.Observation.At >= from) {
-                    // Only return observations of requested type TPercept. Ignore all others.
-                    if (context.Node.Observation.At < to && context.Node.Observation.PerceptType == typeof(TPercept)) {
-                        selectedObservations.Add(context.Node.Observation);
-                    }
-                } else {
+                if (context.Node.Observation.At < from) {
                     // Found first observation earlier than 'from'.
                     // Stop iteration here because the timestamps can only ever decrease into the pest.
                     break;
+                } else {
+                    // Only return observations of requested type TPercept. Ignore all others.
+                    if (context.Node.Observation.PerceptType == typeof(TPercept)) {
+                        selectedObservations.Add(context.Node.Observation);
+                    }
                 }
 
                 using (NoSynchronizationContextScope.Enter()) {
@@ -105,5 +127,29 @@ public sealed class ContextQueries : IContextQueries
         }
 
         return selectedObservations;
+    }
+
+    private static int BinarySearchClosest(List<DateTime> a, DateTime item)
+    {
+        int lowerBound = 0;
+        int upperBound = a.Count - 1;
+        int mid = 0;
+
+        do {
+            mid = lowerBound + ((upperBound - lowerBound) / 2);
+
+            if (item > a[mid]) {
+                lowerBound = mid + 1;
+            } else {
+                upperBound = mid - 1;
+            }
+
+            if (a[mid] == item) {
+                return mid;
+            }
+
+        } while (lowerBound <= upperBound);
+
+        return mid;
     }
 }
