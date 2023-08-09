@@ -9,7 +9,7 @@ public class IpfsDiskPlatformPersistence : IPlatformPersistence
     private readonly ISerializer _serializer;
 
     private readonly ObjectCache _inMemoryObjectCache = new();
-    private readonly DiskCache _diskCache;
+    private readonly RocksDbCache _diskCache;
 
     public IpfsDiskPlatformPersistence(
         ISerializer serializer,
@@ -30,15 +30,15 @@ public class IpfsDiskPlatformPersistence : IPlatformPersistence
         return cid;
     }
 
-    public async ValueTask<TDatum> Get<TDatum>(ContentId cid)
+    public ValueTask<TDatum> Get<TDatum>(ContentId cid)
     {
         // 1. Try read from in-memory cid->obj mapping
         if (_inMemoryObjectCache.TryGet(cid, out var c) && c is TDatum cached) {
-            return cached;
+            return new(cached);
         }
 
         // 2. Try read from local disk
-        var fromDisk = await _diskCache.TryReadFromDisk(cid);
+        var fromDisk = _diskCache.TryReadFromDisk(cid);
         if (fromDisk is not null) {
             // Deserialize loaded raw data
             var datum = _serializer.Deserialize<TDatum>(cid, fromDisk);
@@ -46,7 +46,7 @@ public class IpfsDiskPlatformPersistence : IPlatformPersistence
             // Insert into in-memory cid->obj mapping for future GET requests on that CID.
             _inMemoryObjectCache.Set(cid, datum);
 
-            return datum;
+            return new(datum);
         }
 
         // 3. Try read from IPFS Cluster
@@ -60,7 +60,7 @@ public class IpfsDiskPlatformPersistence : IPlatformPersistence
         return new(false);
     }
 
-    public async ValueTask<ContentId> Put<TDatum>(TDatum datum)
+    public ValueTask<ContentId> Put<TDatum>(TDatum datum)
     {
         // 1. Generate CID and raw bytes locally
         var (cid, raw) = _serializer.Serialize(datum);
@@ -69,11 +69,11 @@ public class IpfsDiskPlatformPersistence : IPlatformPersistence
         _inMemoryObjectCache.Set(cid, datum);
 
         // 3. Write data to disk for persistence
-        await _diskCache.WriteToDisk(cid, raw);
+        _diskCache.WriteToDisk(cid, raw);
 
         // 4. Upload to IPFS Cluster
         // Todo: Call IPFS Cluster API
 
-        return cid;
+        return new(cid);
     }
 }
