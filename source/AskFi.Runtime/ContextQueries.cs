@@ -4,7 +4,6 @@ using AskFi.Runtime.Persistence;
 using AskFi.Runtime.Platform;
 using Microsoft.FSharp.Core;
 using static AskFi.Runtime.DataModel;
-using static AskFi.Runtime.DataModel.ContextSequenceHead;
 using static AskFi.Sdk;
 
 namespace AskFi.Runtime;
