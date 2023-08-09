@@ -8,12 +8,12 @@ namespace AskFi.Runtime.Persistence.Caching;
 /// </summary>
 internal sealed class ObjectCache
 {
-    private readonly ConcurrentDictionary<ContentId, WeakReference> _inMemoryCache = new();
+    private readonly ConcurrentDictionary<byte[], WeakReference> _inMemoryCache = new();
 
     public void Set(ContentId cid, object obj)
     {
         _inMemoryCache.AddOrUpdate(
-            key: cid,
+            key: cid.Raw,
             addValueFactory: (cid, obj) => new WeakReference(obj),
             updateValueFactory: (cid, weakRef, obj) => {
                 weakRef.Target = obj;
@@ -24,7 +24,7 @@ internal sealed class ObjectCache
 
     public bool TryGet(ContentId cid, [NotNullWhen(true)] out object? cached)
     {
-        if (!_inMemoryCache.TryGetValue(cid, out var weakRef)) {
+        if (!_inMemoryCache.TryGetValue(cid.Raw, out var weakRef)) {
             cached = null;
             return false;
         }
