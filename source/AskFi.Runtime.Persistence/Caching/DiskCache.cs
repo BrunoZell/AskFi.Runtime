@@ -1,6 +1,6 @@
 namespace AskFi.Runtime.Persistence.Caching;
 
-public class DiskCache
+internal sealed class DiskCache
 {
 
     private readonly DirectoryInfo _localPersistenceDirectory;
