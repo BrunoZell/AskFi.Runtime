@@ -9,7 +9,7 @@ namespace AskFi.Runtime.Modules.Strategy;
 
 internal class StrategyModule
 {
-    private readonly Func<Reflection, Context, Decision> _strategy;
+    private readonly Func<Reflection, Sdk.Context, Decision> _strategy;
     private readonly IPlatformPersistence _persistence;
     private readonly ChannelReader<NewKnowledgeBase> _input;
     private readonly Channel<NewDecision> _output;
@@ -17,7 +17,7 @@ internal class StrategyModule
     public ChannelReader<NewDecision> Output => _output;
 
     public StrategyModule(
-        Func<Reflection, Context, Decision> strategy,
+        Func<Reflection, Sdk.Context, Decision> strategy,
         IPlatformPersistence persistence,
         ChannelReader<NewKnowledgeBase> input)
     {

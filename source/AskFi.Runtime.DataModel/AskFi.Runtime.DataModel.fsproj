@@ -8,7 +8,6 @@
   <ItemGroup>
     <Compile Include="Runtime.Persistence.fs" />
     <Compile Include="Runtime.DataModel.fs" />
-    <Compile Include="Runtime.Index.fs" />
     <Compile Include="Runtime.Messages.fs" />
     <Compile Include="Runtime.Platform.fs" />
   </ItemGroup>
