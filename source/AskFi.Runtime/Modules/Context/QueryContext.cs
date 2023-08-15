@@ -33,6 +33,9 @@ public sealed class QueryContext : IContextQueries
         }
     }
 
+    public DateTime EarliestObservation => _index.EarliestObservation;
+    public DateTime LatestObservation => _index.LatestObservation;
+
     private QueryContext(
         ContentId latestContextSequenceHead,
         ContextIndex index,
