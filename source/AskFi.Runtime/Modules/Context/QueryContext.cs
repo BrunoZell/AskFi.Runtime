@@ -8,6 +8,10 @@ using static AskFi.Sdk;
 
 namespace AskFi.Runtime.Modules.Context;
 
+/// <summary>
+/// This represents a block of time series data, queryable through the SDKs query interface.
+/// The data availability time frame must be defined upfront with an in-memory index required at load time.
+/// </summary>
 public sealed class QueryContext : IContextQueries
 {
     private readonly ContentId _latestContextSequenceHead;
@@ -16,11 +20,17 @@ public sealed class QueryContext : IContextQueries
 
     public static QueryContext Load(
         ContentId latestContextSequenceHead,
+        DateTime earliestAvailableTimestamp,
         IPlatformPersistence persistence)
     {
-        var index = ContextIndex.Build(latestContextSequenceHead, persistence);
+        using (NoSynchronizationContextScope.Enter()) {
+            var index = ContextIndex.Build(
+                latestContextSequenceHead,
+                earliestAvailableTimestamp,
+                persistence).Result;
 
-        return new(latestContextSequenceHead, index, persistence);
+            return new(latestContextSequenceHead, index, persistence);
+        }
     }
 
     private QueryContext(
